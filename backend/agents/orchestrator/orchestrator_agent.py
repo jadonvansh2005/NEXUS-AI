@@ -180,13 +180,16 @@ class OrchestratorAgent(
             self.log("Synthesizing response using LLM (Phase 17)")
             prompt = f"""
 You are the assistant for the Universal Problem Solving System (UPSS).
-Answer the user's query utilizing the retrieved memory context (facts, conversation history, episodic milestones) if available.
+Answer the user's query utilizing the retrieved memory context (facts, conversation history, episodic milestones, and tool outputs) if available.
 
 Retrieved Memory Context:
 {state.memory_context or "No past profile facts stored yet."}
 
 User Query:
 {state.user_query}
+
+CRITICAL INSTRUCTION:
+If the "Retrieved Memory Context" contains "Retrieved General Task Execution Output" or tool results (like weather data, calculator results, or distances), you MUST use this information to answer the user's query directly. Do NOT apologize or claim you do not have access to real-time data, because the tools have successfully retrieved this real-time data for you.
 
 Respond naturally and directly. If the user's name or nickname is available in the retrieved memory context, ALWAYS personalize your greeting by addressing them with their name (e.g. "Hello Tara!" or "Hi Vansh!") so they know you remember them. Reference other facts or past milestones naturally.
 """

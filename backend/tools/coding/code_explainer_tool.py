@@ -41,7 +41,7 @@ class CodeExplainerTool(BaseTool):
 
         description="Explain source code in a human-readable format.",
 
-        category=ToolCategory.DEVELOPER,
+        category=ToolCategory.OTHER,
 
         tags=[
             "coding",

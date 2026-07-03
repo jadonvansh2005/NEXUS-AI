@@ -281,7 +281,8 @@ class DomainClassifier:
                 "tone",
                 "meeting summary",
                 "compose message",
-                "communication"
+                "communication",
+                "send this mail"
 
             ]
         ):

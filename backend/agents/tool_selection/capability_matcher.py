@@ -150,7 +150,7 @@ class CapabilityMatcher:
         # Coding
         # =================================================
 
-        if "code" in task_name:
+        if ("code" in task_name and "geocode" not in task_name) or "solution" in task_name:
 
             capabilities.append(
                 "generate_code"
@@ -168,7 +168,7 @@ class CapabilityMatcher:
                 "debug_code"
             )
 
-        if "explain" in task_name:
+        if "explain" in task_name or "explain solution" in task_name:
 
             capabilities.append(
                 "explain_code"
@@ -208,9 +208,16 @@ class CapabilityMatcher:
 
         if "email" in task_name:
 
-            capabilities.append(
-                "send_email"
-            )
+            if "read" in task_name:
+                capabilities.append("read_email")
+            elif "search" in task_name:
+                capabilities.append("search_email")
+            elif "draft" in task_name:
+                capabilities.append("draft_email")
+            elif "attachment" in task_name or "download" in task_name:
+                capabilities.append("download_attachments")
+            else:
+                capabilities.append("send_email")
 
         if "translate" in task_name:
 
@@ -238,6 +245,64 @@ class CapabilityMatcher:
 
             capabilities.append(
                 "investment_advice"
+            )
+
+        # =================================================
+        # Research & Web
+        # =================================================
+
+        if "webpage" in task_name or "read" in task_name or "article" in task_name:
+
+            capabilities.append(
+                "read_webpage"
+            )
+
+        elif "source" in task_name or "search" in task_name or "collect" in task_name or "research" in task_name:
+
+            capabilities.append(
+                "web_search"
+            )
+
+        # =================================================
+        # Weather
+        # =================================================
+
+        if "weather" in task_name or "forecast" in task_name or "temp" in task_name or "aqi" in task_name or "air quality" in task_name or "alert" in task_name:
+
+            if "air quality" in task_name or "aqi" in task_name or "pollution" in task_name:
+                capabilities.append("air_quality")
+            elif "alert" in task_name or "warning" in task_name:
+                capabilities.append("weather_alerts")
+            elif "forecast" in task_name or "predict" in task_name or "future" in task_name:
+                capabilities.append("weather_forecast")
+            else:
+                capabilities.append("current_weather")
+
+        # =================================================
+        # Maps
+        # =================================================
+
+        if "distance" in task_name or "route" in task_name or "map" in task_name or "navigation" in task_name or "geocode" in task_name or "places" in task_name or "nearby" in task_name:
+
+            if "distance" in task_name:
+                capabilities.append("map_navigation")
+            elif "geocode" in task_name or "coordinates" in task_name:
+                capabilities.append("geocode")
+            elif "navigation" in task_name or "directions" in task_name:
+                capabilities.append("navigation")
+            elif "places" in task_name or "nearby" in task_name:
+                capabilities.append("nearby_places")
+            elif "route" in task_name:
+                capabilities.append("route")
+
+        # =================================================
+        # Calculator
+        # =================================================
+
+        if "calculate" in task_name or "calculator" in task_name or "math" in task_name:
+
+            capabilities.append(
+                "calculator"
             )
 
         # =================================================

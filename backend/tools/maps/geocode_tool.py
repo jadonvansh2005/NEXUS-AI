@@ -64,48 +64,47 @@ class GeocodeTool(BaseTool):
         request: GeocodeRequest,
     ) -> ToolResult:
 
-        #
-        # Future Provider Integration
-        #
-        # result = provider.geocode(
-        #     request.address
-        # )
-        #
+        import httpx
+        import urllib.parse
 
-        location = {
-
-            "address": request.address,
-
+        address = request.address
+        location_data = {
+            "address": address,
             "latitude": 26.2183,
-
             "longitude": 78.1828,
-
-            "formatted_address": request.address,
-
+            "formatted_address": address,
             "provider": request.provider.value,
-
         }
 
+        try:
+            headers = {"User-Agent": "UPSS-Assistant/1.0"}
+            escaped_address = urllib.parse.quote(address)
+            url = f"https://nominatim.openstreetmap.org/search?q={escaped_address}&format=json&limit=1"
+            
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                resp = await client.get(url, headers=headers)
+                if resp.status_code == 200 and resp.json():
+                    geo = resp.json()[0]
+                    location_data = {
+                        "address": address,
+                        "latitude": float(geo["lat"]),
+                        "longitude": float(geo["lon"]),
+                        "formatted_address": geo.get("display_name", address),
+                        "provider": "OpenStreetMap Nominatim",
+                    }
+        except Exception as e:
+            print(f"[Geocode Live Error] {e}")
+
         response = MapsResponse(
-
             success=True,
-
             message="Location geocoded successfully.",
-
-            provider=request.provider.value,
-
+            provider=location_data["provider"],
         )
 
         return ToolResult.ok(
-
             message=response.message,
-
             data={
-
-                "location": location,
-
+                "location": location_data,
                 **response.model_dump(),
-
             },
-
         )

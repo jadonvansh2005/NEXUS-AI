@@ -43,7 +43,7 @@ class CodeReviewerTool(BaseTool):
 
         description="Analyze source code and provide review feedback.",
 
-        category=ToolCategory.DEVELOPER,
+        category=ToolCategory.OTHER,
 
         tags=[
             "coding",

@@ -10,6 +10,22 @@ from llm.providers.gemini.gemini_client import (
     GeminiClient
 )
 
+from llm.providers.openai.openai_client import (
+    OpenAIClient
+)
+
+from llm.providers.claude.claude_client import (
+    ClaudeClient
+)
+
+from llm.providers.mistral.mistral_client import (
+    MistralClient
+)
+
+from llm.providers.llama.llama_client import (
+    LlamaClient
+)
+
 
 class ModelRouter:
 
@@ -20,10 +36,11 @@ class ModelRouter:
         )
 
         self.models = {
-
-            "gemini":
-                GeminiClient()
-
+            "gemini": GeminiClient(),
+            "openai": OpenAIClient(),
+            "claude": ClaudeClient(),
+            "mistral": MistralClient(),
+            "llama": LlamaClient()
         }
 
     def generate(
@@ -61,13 +78,31 @@ class ModelRouter:
                 )
             )
 
-            model = self.models[
-                model_name
-            ]
+            # Check if the requested model exists, default to gemini
+            model = self.models.get(model_name, self.models["gemini"])
 
-            return model.generate(
-                prompt
-            )
+            # Verify if the model's key is configured, fallback if not
+            if hasattr(model, "api_key") and not getattr(model, "api_key", None):
+                print(f"[ModelRouter Warning] API key for '{model_name}' is not set. Falling back to Gemini.")
+                model = self.models["gemini"]
+                model_name = "gemini"
+
+            print(f"[ModelRouter] Routing '{task_type}' task in domain '{domain}' using model '{model_name}'")
+            response = model.generate(prompt)
+
+            # Check if the response indicates a configuration or runtime error, fallback if so
+            if isinstance(response, str) and (
+                "[OpenAI Client] Error:" in response or 
+                "[Claude Client] Error:" in response or 
+                "[Mistral Client] Error:" in response or
+                "[OpenAI Error]" in response or
+                "[Claude Error]" in response or
+                "[Mistral Error]" in response
+            ):
+                print(f"[ModelRouter Fallback] Provider '{model_name}' returned error. Falling back to Gemini.")
+                response = self.models["gemini"].generate(prompt)
+
+            return response
         except Exception as e:
             import traceback
             print(f"\n[ModelRouter Error] Failed to generate response for domain '{domain}': {e}")

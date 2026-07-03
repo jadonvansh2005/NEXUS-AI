@@ -15,7 +15,7 @@ class AgentRegistry:
     ):
 
         self.agents[
-            domain
+            domain.lower()
         ] = agent
 
     def get_agent(
@@ -27,7 +27,7 @@ class AgentRegistry:
     ):
 
         return self.agents.get(
-            domain
+            domain.lower()
         )
 
     def list_agents(

@@ -196,15 +196,23 @@ async def chat(
 
         )
 
-        extracted_facts = fact_manager.process_message(
-
-            db=db,
-
-            user_id=current_user.id,
-
-            message=message
-
+        # Check if the query is a tool execution request to bypass profile fact hijacking
+        q_lower = message.lower()
+        has_tool_keywords = any(
+            w in q_lower
+            for w in [
+                "email", "mail", "send", "weather", "temp", "temperature",
+                "calculate", "calculator", "math", "distance", "route", "map"
+            ]
         )
+
+        extracted_facts = None
+        if not has_tool_keywords:
+            extracted_facts = fact_manager.process_message(
+                db=db,
+                user_id=current_user.id,
+                message=message
+            )
 
         episodic_manager.process_message(
 

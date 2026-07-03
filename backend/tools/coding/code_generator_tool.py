@@ -41,7 +41,7 @@ class CodeGeneratorTool(BaseTool):
 
         description="Generate source code from natural language.",
 
-        category=ToolCategory.DEVELOPER,
+        category=ToolCategory.OTHER,
 
         tags=[
             "coding",

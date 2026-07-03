@@ -114,6 +114,8 @@ class WorkflowAgent(BaseAgent):
             )
         )
 
+        workflow_state.metadata["user_query"] = getattr(state, "user_query", "")
+
         #
         # ----------------------------------------------
         # Validate Workflow

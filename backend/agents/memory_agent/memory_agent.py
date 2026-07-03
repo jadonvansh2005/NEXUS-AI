@@ -143,11 +143,10 @@ class MemoryAgent(
 
         context = "\n\n".join(context_parts) if context_parts else ""
 
-        state.memory_context = (
-
-            context
-
-        )
+        if state.memory_context:
+            state.memory_context = context + "\n\n" + state.memory_context
+        else:
+            state.memory_context = context
 
         state.context = (
 

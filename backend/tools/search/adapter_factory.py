@@ -66,7 +66,13 @@ class SearchAdapterFactory:
         """
 
         if provider == SearchProvider.AUTO:
-            provider = SearchProvider.TAVILY
+            import os
+            if os.getenv("TAVILY_API_KEY"):
+                provider = SearchProvider.TAVILY
+            elif os.getenv("SERPAPI_API_KEY"):
+                provider = SearchProvider.SERPAPI
+            else:
+                provider = SearchProvider.DUCKDUCKGO
 
         adapter_cls = cls._registry.get(provider)
 

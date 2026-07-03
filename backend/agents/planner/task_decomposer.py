@@ -262,30 +262,54 @@ class TaskDecomposer:
             ]
 
         elif domain == "communication":
-
-            return [
-
-                PlannerTask(
-                    id="task_1",
-                    name="Understand Communication Goal",
-                    description="Understand communication request."
-                ),
-
-                PlannerTask(
-                    id="task_2",
-                    name="Prepare Message",
-                    description="Prepare content.",
-                    depends_on=["task_1"]
-                ),
-
-                PlannerTask(
-                    id="task_3",
-                    name="Deliver Communication",
-                    description="Send or prepare communication.",
-                    depends_on=["task_2"]
-                )
-
-            ]
+            q_lower = query.lower()
+            if "attachment" in q_lower or "download" in q_lower:
+                return [
+                    PlannerTask(
+                        id="task_1",
+                        name="Download Email Attachment",
+                        description="Download attachments from email."
+                    )
+                ]
+            elif "draft" in q_lower or "prepare" in q_lower:
+                return [
+                    PlannerTask(
+                        id="task_1",
+                        name="Draft Email",
+                        description="Create an email draft."
+                    )
+                ]
+            elif "read" in q_lower or "view" in q_lower or "open" in q_lower:
+                return [
+                    PlannerTask(
+                        id="task_1",
+                        name="Read Email",
+                        description="Read email message contents."
+                    )
+                ]
+            elif "search" in q_lower or "find" in q_lower:
+                return [
+                    PlannerTask(
+                        id="task_1",
+                        name="Search Email",
+                        description="Search mail box."
+                    )
+                ]
+            else:
+                # Default to email sending workflow
+                return [
+                    PlannerTask(
+                        id="task_1",
+                        name="Analyze Email Request",
+                        description="Extract email parameters."
+                    ),
+                    PlannerTask(
+                        id="task_2",
+                        name="Send Email",
+                        description="Deliver the email to the recipient.",
+                        depends_on=["task_1"]
+                    )
+                ]
 
         elif domain == "business":
 
@@ -402,6 +426,85 @@ class TaskDecomposer:
                 )
 
             ]
+
+        # General domain dynamic sub-task plans
+        if domain == "general":
+            q_lower = query.lower()
+            if any(w in q_lower for w in ["weather", "forecast", "temp", "temperature", "climate", "aqi", "air quality", "pollution", "alert", "warning"]):
+                if "air quality" in q_lower or "aqi" in q_lower or "pollution" in q_lower:
+                    task_name = "Fetch Air Quality"
+                    task_desc = "Retrieve real-time air quality information."
+                elif "alert" in q_lower or "warning" in q_lower:
+                    task_name = "Fetch Weather Alerts"
+                    task_desc = "Retrieve active weather alerts."
+                elif "forecast" in q_lower or "predict" in q_lower:
+                    task_name = "Fetch Weather Forecast"
+                    task_desc = "Retrieve weather forecast details."
+                else:
+                    task_name = "Fetch Current Weather"
+                    task_desc = "Retrieve real-time weather information."
+                    
+                return [
+                    PlannerTask(
+                        id="task_1",
+                        name="Analyze Weather Request",
+                        description="Identify location for weather report."
+                    ),
+                    PlannerTask(
+                        id="task_2",
+                        name=task_name,
+                        description=task_desc,
+                        depends_on=["task_1"]
+                    )
+                ]
+            
+            if any(w in q_lower for w in ["calculate", "calculator", "math", "+", "-", "*", "/", "sum", "add", "multiply", "divide"]):
+                # Guard against weather or maps queries that happen to use the word "calculate"
+                if not any(w in q_lower for w in ["weather", "forecast", "temp", "temperature", "climate", "aqi", "air quality", "pollution", "alert", "warning", "distance", "route", "map", "navigation", "geocode", "coordinates", "places", "nearby", "directions", "direction"]):
+                    return [
+                        PlannerTask(
+                            id="task_1",
+                            name="Analyze Math Expression",
+                            description="Identify expression to calculate."
+                        ),
+                        PlannerTask(
+                            id="task_2",
+                            name="Calculate Expression",
+                            description="Evaluate mathematical expression.",
+                            depends_on=["task_1"]
+                        )
+                    ]
+                
+            if any(w in q_lower for w in ["distance", "route", "map", "navigation", "between", "from", "geocode", "coordinates", "places", "nearby"]):
+                if "geocode" in q_lower or "coordinates" in q_lower:
+                    task_name = "Geocode Address"
+                    task_desc = "Convert address to geographic coordinates."
+                elif "navigation" in q_lower or "directions" in q_lower:
+                    task_name = "Generate Navigation Guidance"
+                    task_desc = "Provide turn-by-turn navigation instructions."
+                elif "places" in q_lower or "nearby" in q_lower:
+                    task_name = "Search Nearby Places"
+                    task_desc = "Find nearby points of interest."
+                elif "route" in q_lower:
+                    task_name = "Calculate Best Route"
+                    task_desc = "Compute optimal route legs and steps."
+                else:
+                    task_name = "Calculate Map Distance"
+                    task_desc = "Compute distance between locations."
+
+                return [
+                    PlannerTask(
+                        id="task_1",
+                        name="Analyze Map Request",
+                        description="Identify origin, destination or address."
+                    ),
+                    PlannerTask(
+                        id="task_2",
+                        name=task_name,
+                        description=task_desc,
+                        depends_on=["task_1"]
+                    )
+                ]
 
         return [
 

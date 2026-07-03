@@ -4,11 +4,11 @@ ROUTING_RULES = {
         "gemini",
 
     "data_science":
-        "gemini",
+        "mistral",
 
     "research":
-        "gemini",
+        "claude",
 
     "coding":
-        "gemini"
+        "openai"
 }

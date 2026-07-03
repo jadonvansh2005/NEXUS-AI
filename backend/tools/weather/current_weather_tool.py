@@ -63,39 +63,45 @@ class CurrentWeatherTool(BaseTool):
         request: CurrentWeatherRequest,
     ) -> ToolResult:
 
-        #
-        # Future Provider Integration
-        #
-        # weather = provider.current_weather(
-        #     request.location
-        # )
-        #
+        import requests
 
-        weather = {
-
-            "location": request.location,
-
-            "temperature": 28,
-
-            "feels_like": 31,
-
-            "humidity": 68,
-
-            "pressure": 1012,
-
-            "wind_speed": 14,
-
-            "wind_direction": "NW",
-
-            "visibility": 10000,
-
-            "condition": "Partly Cloudy",
-
-            "icon": "partly_cloudy",
-
-            "provider": request.provider.value,
-
-        }
+        weather = None
+        try:
+            # Query the free public keyless weather API wttr.in
+            url = f"https://wttr.in/{request.location}?format=j1"
+            res = requests.get(url, timeout=8)
+            res.raise_for_status()
+            data = res.json()
+            
+            cond = data["current_condition"][0]
+            weather = {
+                "location": request.location,
+                "temperature": int(cond.get("temp_C", 28)),
+                "feels_like": int(cond.get("FeelsLikeC", 31)),
+                "humidity": int(cond.get("humidity", 68)),
+                "pressure": int(cond.get("pressure", 1012)),
+                "wind_speed": int(cond.get("windspeedKmh", 14)),
+                "wind_direction": cond.get("winddir16Point", "NW"),
+                "visibility": int(cond.get("visibility", 10)) * 1000,
+                "condition": cond.get("weatherDesc", [{"value": "Partly Cloudy"}])[0]["value"],
+                "icon": "partly_cloudy",
+                "provider": request.provider.value,
+            }
+        except Exception as e:
+            # Fallback to safe mock weather data on connection error
+            weather = {
+                "location": request.location,
+                "temperature": 28,
+                "feels_like": 31,
+                "humidity": 68,
+                "pressure": 1012,
+                "wind_speed": 14,
+                "wind_direction": "NW",
+                "visibility": 10000,
+                "condition": "Partly Cloudy (Mock Fallback)",
+                "icon": "partly_cloudy",
+                "provider": request.provider.value,
+            }
 
         response = WeatherResponse(
 

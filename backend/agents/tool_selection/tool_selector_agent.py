@@ -147,6 +147,7 @@ class ToolSelectorAgent:
             )
 
         )
+        print(f"[DIAGNOSTIC] Task Name: {task.name}, Matched Capabilities: {capabilities}")
 
         self.logger.capability_detected(
             capabilities
@@ -165,6 +166,7 @@ class ToolSelectorAgent:
             )
 
         )
+        print(f"[DIAGNOSTIC] Candidate Tools for {task.name}: {[c.name if hasattr(c, 'name') else str(c) for c in candidates]}")
 
         self.logger.candidate_tools(
             candidates
