@@ -62,63 +62,42 @@ class CodeExplainerTool(BaseTool):
         request: CodeExplainerRequest,
     ) -> ToolResult:
 
-        #
-        # Future Pipeline
-        #
-        # language = LanguageDetector.detect(...)
-        #
-        # ast = ASTParser.parse(...)
-        #
-        # dependencies = DependencyAnalyzer(...)
-        #
-        # explanation = LLM.explain(
-        #     code=request.code,
-        #     language=request.language,
-        # )
-        #
-        # DocumentationTool.generate(...)
-        #
+        from llm.router.model_router import ModelRouter
+
+        prompt = f"""
+You are an expert software engineer and technical teacher.
+Explain the following code in a clear, human-readable, and step-by-step format.
+Detail what the code does, its algorithmic complexity (if relevant), and how it works.
+Language: {request.language}
+Code:
+{request.code}
+"""
+        router = ModelRouter()
+        success = True
+        message = "Code explanation completed successfully."
+        try:
+            explanation = router.generate(prompt, request.code, "coding")
+        except Exception as e:
+            success = False
+            explanation = f"Failed to explain code: {e}"
+            message = f"Error explaining code: {e}"
 
         result = {
-
             "language": request.language,
-
-            "lines_of_code": len(
-                request.code.splitlines()
-            ),
-
-            "status": "code_explanation_pending",
-
-            "message": (
-
-                "Code explanation will "
-
-                "be generated after "
-
-                "LLM integration."
-
-            ),
-
+            "lines_of_code": len(request.code.splitlines()),
+            "status": "completed" if success else "failed",
+            "explanation": explanation,
         }
 
         response = CodingResponse(
-
-            success=True,
-
-            message="Code explanation request prepared successfully.",
-
+            success=success,
+            message=message,
         )
 
         return ToolResult.ok(
-
             message=response.message,
-
             data={
-
                 "code_explanation": result,
-
                 **response.model_dump(),
-
             },
-
         )

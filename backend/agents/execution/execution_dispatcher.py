@@ -83,6 +83,8 @@ class ExecutionDispatcher:
         import inspect
         from tools.tool_context import ToolContext
         context = ToolContext()
+        if isinstance(task_input, dict) and "raw_query" in task_input:
+            context.metadata["raw_query"] = task_input["raw_query"]
 
         # Parse request model if defined on the tool
         input_model = getattr(tool, "input_model", None)

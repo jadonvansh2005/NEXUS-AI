@@ -43,7 +43,7 @@ class BugFixTool(BaseTool):
 
         description="Analyze source code and prepare bug fixes.",
 
-        category=ToolCategory.DEVELOPER,
+        category=ToolCategory.OTHER,
 
         tags=[
             "coding",
@@ -64,69 +64,48 @@ class BugFixTool(BaseTool):
         request: BugFixRequest,
     ) -> ToolResult:
 
-        #
-        # Future Pipeline
-        #
-        # runner = PythonRunner(...)
-        #
-        # traceback = runner.execute(...)
-        #
-        # debugger = Debugger(...)
-        #
-        # fix = LLM.fix_code(
-        #     code=request.code,
-        #     error=request.error_message,
-        # )
-        #
-        # validator = TestRunner(...)
-        #
-        # GitAssistant.commit(...)
-        #
+        from llm.router.model_router import ModelRouter
+
+        prompt = f"""
+You are an expert developer.
+Analyze the following source code and the accompanying error message.
+Find the root cause of the error and provide:
+1. An explanation of what went wrong.
+2. The fixed source code.
+
+Language: {request.language}
+Error Message: {request.error_message}
+
+Code:
+{request.code}
+"""
+        router = ModelRouter()
+        success = True
+        message = "Bug fix suggestion generated successfully."
+        try:
+            fix_response = router.generate(prompt, request.error_message, "coding")
+        except Exception as e:
+            success = False
+            fix_response = f"Failed to generate bug fix: {e}"
+            message = f"Error during bug fixing: {e}"
 
         result = {
-
             "language": request.language,
-
             "error_message": request.error_message,
-
-            "lines_of_code": len(
-                request.code.splitlines()
-            ),
-
-            "status": "bug_fix_pending",
-
-            "message": (
-
-                "Bug fixing will be "
-
-                "performed after "
-
-                "LLM and execution "
-
-                "pipeline integration."
-
-            ),
-
+            "lines_of_code": len(request.code.splitlines()),
+            "status": "completed" if success else "failed",
+            "fix": fix_response,
         }
 
         response = CodingResponse(
-
-            success=True,
-
-            message="Bug fix request prepared successfully.",
-
+            success=success,
+            message=message,
         )
 
         return ToolResult.ok(
-
             message=response.message,
-
             data={
-
                 "bug_fix": result,
-
                 **response.model_dump(),
-
             },
-
         )

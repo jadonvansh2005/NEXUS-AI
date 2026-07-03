@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UPSS Developer Assistant</title>
+    <!-- Syntax Highlight Style CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/github-dark.min.css">
+    <style>
+        /* Modern Glassmorphic Dark UI */
+        :root {
+            --bg-color: #0f172a;
+            --chat-bg: #1e293b;
+            --accent-glow: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            --user-gradient: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            --assistant-gradient: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            --text-color: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Header Style */
+        .header {
+            padding: 14px 16px;
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(8px);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header-title {
+            font-weight: 700;
+            font-size: 14px;
+            letter-spacing: 0.5px;
+            background: var(--accent-glow);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .status-container {
+            display: flex;
+            align-items: center;
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #22c55e;
+            border-radius: 50%;
+            margin-right: 6px;
+            box-shadow: 0 0 8px #22c55e;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+        }
+
+        /* Chat Panel Container */
+        .chat-container {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .message-bubble {
+            max-width: 85%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 13px;
+            line-height: 1.5;
+            word-wrap: break-word;
+        }
+
+        .message-bubble p {
+            margin: 4px 0;
+        }
+
+        .message-user {
+            align-self: flex-end;
+            background: var(--user-gradient);
+            color: #fff;
+            border-bottom-right-radius: 2px;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+        }
+
+        .message-assistant {
+            align-self: flex-start;
+            background: var(--assistant-gradient);
+            border: 1px solid var(--border-color);
+            border-bottom-left-radius: 2px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Code block wrapper with buttons */
+        .code-wrapper {
+            position: relative;
+            margin: 12px 0;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+
+        .code-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #1e293b;
+            padding: 6px 12px;
+            font-family: monospace;
+            font-size: 11px;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .code-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .code-btn {
+            background: rgba(99, 102, 241, 0.15);
+            color: #818cf8;
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 4px;
+            padding: 3px 8px;
+            font-size: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .code-btn:hover {
+            background: #6366f1;
+            color: #fff;
+        }
+
+        pre {
+            margin: 0;
+            padding: 12px;
+            overflow-x: auto;
+            background: #0d1117 !important;
+        }
+
+        code {
+            font-family: "Fira Code", Consolas, Monaco, monospace;
+            font-size: 12px;
+        }
+
+        /* Input Panel Area */
+        .input-panel {
+            padding: 12px 16px;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(12px);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .text-input {
+            flex: 1;
+            background: var(--chat-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 10px 14px;
+            color: var(--text-color);
+            font-size: 13px;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .text-input:focus {
+            border-color: #6366f1;
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.25);
+        }
+
+        .send-btn {
+            background: var(--accent-glow);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 16px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .send-btn:hover {
+            opacity: 0.9;
+        }
+
+        .loading-dots {
+            display: inline-flex;
+            gap: 4px;
+            padding: 4px 8px;
+        }
+
+        .loading-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--text-muted);
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+
+        .loading-dot:nth-child(1) { animation-delay: -0.32s; }
+        .loading-dot:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1.0); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-title">UPSS Assistant</div>
+        <div class="status-container">
+            <div class="status-dot"></div>
+            <span>Connected</span>
+        </div>
+    </div>
+
+    <div class="chat-container" id="chatContainer">
+        <div class="message-bubble message-assistant">
+            Hello! I am your autonomous Developer Assistant. Ask me to write code, clone repos, or push project repositories to GitHub!
+        </div>
+    </div>
+
+    <div class="input-panel">
+        <div class="input-row">
+            <input type="text" class="text-input" id="messageInput" placeholder="Write code, clone, or publish repos..." onkeydown="handleKey(event)">
+            <button class="send-btn" id="sendBtn" onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <!-- Script assets CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+    <script>
+        const vscode = acquireVsCodeApi();
+        const chatContainer = document.getElementById('chatContainer');
+        const messageInput = document.getElementById('messageInput');
+        const sendBtn = document.getElementById('sendBtn');
+        
+        let conversationId = null;
+
+        // Custom Markdown Code Block renderer
+        const renderer = new marked.Renderer();
+        renderer.code = function(code, language) {
+            // Escape special chars to prevent syntax break in click arguments
+            const escapedCode = code
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+                
+            const cleanLang = language || 'code';
+            
+            return `
+                <div class="code-wrapper">
+                    <div class="code-header">
+                        <span>${cleanLang}</span>
+                        <div class="code-actions">
+                            <button class="code-btn" onclick="insertCode(this)" data-code="${escapedCode}">Insert at Cursor</button>
+                            <button class="code-btn" onclick="createFile(this, '${cleanLang}')" data-code="${escapedCode}">Create File</button>
+                        </div>
+                    </div>
+                    <pre><code class="hljs ${cleanLang}">${hljs.highlightAuto(code).value}</code></pre>
+                </div>
+            `;
+        };
+        marked.setOptions({ renderer: renderer });
+
+        function appendMessage(text, isUser) {
+            const bubble = document.createElement('div');
+            bubble.className = `message-bubble ${isUser ? 'message-user' : 'message-assistant'}`;
+            
+            if (isUser) {
+                bubble.innerText = text;
+            } else {
+                bubble.innerHTML = marked.parse(text);
+            }
+            
+            chatContainer.appendChild(bubble);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function appendLoading() {
+            const bubble = document.createElement('div');
+            bubble.className = 'message-bubble message-assistant';
+            bubble.id = 'loadingBubble';
+            bubble.innerHTML = `
+                <div class="loading-dots">
+                    <div class="loading-dot"></div>
+                    <div class="loading-dot"></div>
+                    <div class="loading-dot"></div>
+                </div>
+            `;
+            chatContainer.appendChild(bubble);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function removeLoading() {
+            const loading = document.getElementById('loadingBubble');
+            if (loading) loading.remove();
+        }
+
+        function sendMessage() {
+            const text = messageInput.value.trim();
+            if (!text) return;
+
+            appendMessage(text, true);
+            messageInput.value = '';
+            appendLoading();
+
+            vscode.postMessage({
+                type: 'sendMessage',
+                message: text,
+                conversationId: conversationId
+            });
+        }
+
+        function handleKey(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        // Bridge elements click calling VS Code extension APIs
+        function unescapeHTML(str) {
+            return str
+                .replace(/&amp;/g, '&')
+                .replace(/&lt;/g, '<')
+                .replace(/&gt;/g, '>')
+                .replace(/&quot;/g, '"')
+                .replace(/&#39;/g, "'");
+        }
+
+        function insertCode(element) {
+            const code = unescapeHTML(element.getAttribute('data-code'));
+            vscode.postMessage({ type: 'insertCode', code: code });
+        }
+
+        function createFile(element, lang) {
+            const code = unescapeHTML(element.getAttribute('data-code'));
+            let defaultExt = 'py';
+            if (lang === 'javascript' || lang === 'js') defaultExt = 'js';
+            else if (lang === 'typescript' || lang === 'ts') defaultExt = 'ts';
+            else if (lang === 'html') defaultExt = 'html';
+            else if (lang === 'css') defaultExt = 'css';
+            else if (lang === 'json') defaultExt = 'json';
+            
+            const filename = `generated_file.${defaultExt}`;
+            vscode.postMessage({ type: 'createFile', code: code, filename: filename });
+        }
+
+        // Event listener for backend replies
+        window.addEventListener('message', event => {
+            const message = event.data;
+            switch (message.type) {
+                case 'receiveResponse':
+                    removeLoading();
+                    
+                    const responseData = message.data;
+                    let textResponse = responseData.response || '';
+                    
+                    if (responseData.final_response) {
+                        textResponse = responseData.final_response;
+                    }
+                    
+                    if (responseData.conversation_id) {
+                        conversationId = responseData.conversation_id;
+                    }
+                    
+                    appendMessage(textResponse, false);
+                    break;
+                    
+                case 'receiveError':
+                    removeLoading();
+                    appendMessage(`⚠️ **Error:** ${message.message}`, false);
+                    break;
+            }
+        });
+    </script>
+</body>
+</html>

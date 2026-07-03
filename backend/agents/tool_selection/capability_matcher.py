@@ -147,32 +147,59 @@ class CapabilityMatcher:
             )
 
         # =================================================
-        # Coding
+        # Coding & GitHub
         # =================================================
 
-        if ("code" in task_name and "geocode" not in task_name) or "solution" in task_name:
+        if "clone" in task_name:
+            capabilities.append("clone_repo")
 
-            capabilities.append(
-                "generate_code"
-            )
+        if "commit" in task_name:
+            capabilities.append("commit_changes")
+
+        if "push" in task_name or "upload" in task_name or "publish" in task_name:
+            capabilities.append("push_changes")
+
+        if "pull request" in task_name or "pr" in task_name:
+            capabilities.append("create_pr")
+
+        if "issue" in task_name:
+            capabilities.append("create_issue")
+
+        if "search repo" in task_name or "search repository" in task_name or "find repo" in task_name:
+            capabilities.append("search_repositories")
+
+        if "bug" in task_name or "fix" in task_name:
+            capabilities.append("fix_bugs")
+
+        if "dependency" in task_name or "package" in task_name or "imports" in task_name:
+            capabilities.append("analyze_dependencies")
+
+        if "doc" in task_name or "comment" in task_name:
+            capabilities.append("generate_documentation")
+
+        if "git" in task_name:
+            capabilities.append("git_assistance")
+
+        if "project" in task_name or "boilerplate" in task_name:
+            capabilities.append("generate_project")
+
+        if "refactor" in task_name or "clean" in task_name or "improve" in task_name:
+            capabilities.append("refactor_code")
+
+        if "test" in task_name or "unit test" in task_name:
+            capabilities.append("generate_tests")
+
+        if ("code" in task_name and "geocode" not in task_name) or "solution" in task_name or "write" in task_name:
+            capabilities.append("generate_code")
 
         if "review" in task_name:
-
-            capabilities.append(
-                "review_code"
-            )
+            capabilities.append("review_code")
 
         if "debug" in task_name:
-
-            capabilities.append(
-                "debug_code"
-            )
+            capabilities.append("debug_code")
 
         if "explain" in task_name or "explain solution" in task_name:
-
-            capabilities.append(
-                "explain_code"
-            )
+            capabilities.append("explain_code")
 
         # =================================================
         # Career

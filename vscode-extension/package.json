@@ -1,0 +1,56 @@
+{
+  "name": "upss-developer-assistant",
+  "displayName": "UPSS Developer Assistant",
+  "description": "Autonomous AI coding and GitHub assistant inside VS Code.",
+  "version": "1.0.0",
+  "publisher": "upss",
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": [
+    "AI",
+    "Programming",
+    "Collaboration"
+  ],
+  "activationEvents": [],
+  "main": "./out/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "upss-sidebar",
+          "title": "UPSS Assistant",
+          "icon": "$(terminal)"
+        }
+      ]
+    },
+    "views": {
+      "upss-sidebar": [
+        {
+          "type": "webview",
+          "id": "upss-chat-view",
+          "name": "UPSS Developer Assistant"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "upss.insertCode",
+        "title": "UPSS: Insert Code Block"
+      },
+      {
+        "command": "upss.createFile",
+        "title": "UPSS: Create File from Code"
+      }
+    ]
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.75.0",
+    "@types/node": "^18.11.18",
+    "typescript": "^4.9.5"
+  }
+}

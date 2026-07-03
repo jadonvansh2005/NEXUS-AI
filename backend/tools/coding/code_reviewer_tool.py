@@ -64,63 +64,42 @@ class CodeReviewerTool(BaseTool):
         request: CodeReviewRequest,
     ) -> ToolResult:
 
-        #
-        # Future Pipeline
-        #
-        # lint = Ruff.run(...)
-        #
-        # static = SonarQube.analyze(...)
-        #
-        # review = LLM.review_code(
-        #     code=request.code,
-        #     language=request.language,
-        # )
-        #
-        # security = CodeQL.scan(...)
-        #
+        from llm.router.model_router import ModelRouter
+
+        prompt = f"""
+You are an expert senior software developer and code reviewer.
+Review the following code for bugs, logic errors, performance issues, readability, and security vulnerabilities.
+Provide constructive feedback and recommended improvements.
+Language: {request.language}
+Code:
+{request.code}
+"""
+        router = ModelRouter()
+        success = True
+        message = "Code review completed successfully."
+        try:
+            review_feedback = router.generate(prompt, request.code, "coding")
+        except Exception as e:
+            success = False
+            review_feedback = f"Failed to perform code review: {e}"
+            message = f"Error during code review: {e}"
 
         result = {
-
             "language": request.language,
-
-            "lines_of_code": len(
-                request.code.splitlines()
-            ),
-
-            "status": "code_review_pending",
-
-            "message": (
-
-                "Code review will be "
-
-                "performed after "
-
-                "LLM and static "
-
-                "analysis integration."
-
-            ),
-
+            "lines_of_code": len(request.code.splitlines()),
+            "status": "completed" if success else "failed",
+            "review": review_feedback,
         }
 
         response = CodingResponse(
-
-            success=True,
-
-            message="Code review request prepared successfully.",
-
+            success=success,
+            message=message,
         )
 
         return ToolResult.ok(
-
             message=response.message,
-
             data={
-
                 "review": result,
-
                 **response.model_dump(),
-
             },
-
         )

@@ -144,36 +144,155 @@ class TaskDecomposer:
             ]
 
         elif domain == "coding":
+            import re
+            q_lower = re.sub(r'\[workspace:\s*.+?\]', '', query).lower()
+            
+            # Git & GitHub workflows
+            if any(w in q_lower for w in ["push", "upload", "publish", "github", "git"]):
+                if "clone" in q_lower:
+                    return [
+                        PlannerTask(
+                            id="task_1",
+                            name="Clone Repository",
+                            description="Clone repository from GitHub."
+                        )
+                    ]
+                elif "commit" in q_lower:
+                    return [
+                        PlannerTask(
+                            id="task_1",
+                            name="Git Commit",
+                            description="Create local git commit."
+                        )
+                    ]
+                elif "pull request" in q_lower or "pr" in q_lower:
+                    return [
+                        PlannerTask(
+                            id="task_1",
+                            name="Create Pull Request",
+                            description="Create Pull Request on GitHub."
+                        )
+                    ]
+                elif "issue" in q_lower:
+                    return [
+                        PlannerTask(
+                            id="task_1",
+                            name="Create GitHub Issue",
+                            description="Create issue on GitHub."
+                        )
+                    ]
+                else:
+                    # Upload to GitHub / Push workflow
+                    return [
+                        PlannerTask(
+                            id="task_1",
+                            name="Git Commit",
+                            description="Commit local workspace changes."
+                        ),
+                        PlannerTask(
+                            id="task_2",
+                            name="Git Push",
+                            description="Push committed files to GitHub remote repository.",
+                            depends_on=["task_1"]
+                        )
+                    ]
+            
+            # Project Generator
+            if "project" in q_lower or "boilerplate" in q_lower:
+                return [
+                    PlannerTask(
+                        id="task_1",
+                        name="Generate Project",
+                        description="Generate standard boilerplate project structures."
+                    )
+                ]
+                
+            # Dependency Analyzer
+            if "dependency" in q_lower or "package" in q_lower or "imports" in q_lower:
+                return [
+                    PlannerTask(
+                        id="task_1",
+                        name="Analyze Dependencies",
+                        description="Analyze codebase import dependencies."
+                    )
+                ]
 
+            # Bug Fixer
+            if "bug" in q_lower or "fix" in q_lower:
+                return [
+                    PlannerTask(
+                        id="task_1",
+                        name="Fix Bugs",
+                        description="Generate code bug fixes for errors."
+                    )
+                ]
+
+            # Debugger
+            if "debug" in q_lower or "trace" in q_lower:
+                return [
+                    PlannerTask(
+                        id="task_1",
+                        name="Debug Code",
+                        description="Analyze and debug execution runtime errors."
+                    )
+                ]
+
+            # Refactor
+            if "refactor" in q_lower or "clean" in q_lower:
+                return [
+                    PlannerTask(
+                        id="task_1",
+                        name="Refactor Code",
+                        description="Improve code design structure."
+                    )
+                ]
+
+            # Test Generator
+            if "test" in q_lower or "unit test" in q_lower:
+                return [
+                    PlannerTask(
+                        id="task_1",
+                        name="Generate Tests",
+                        description="Generate automated test cases."
+                    )
+                ]
+
+            # Documentation
+            if "doc" in q_lower or "comment" in q_lower or "readme" in q_lower:
+                return [
+                    PlannerTask(
+                        id="task_1",
+                        name="Generate Documentation",
+                        description="Generate developer guides or inline documentation."
+                    )
+                ]
+                
+            # Explainer
+            if "explain" in q_lower:
+                return [
+                    PlannerTask(
+                        id="task_1",
+                        name="Explain Solution",
+                        description="Explain code structure."
+                    )
+                ]
+
+            if "search" in q_lower or "find" in q_lower:
+                return [
+                    PlannerTask(
+                        id="task_1",
+                        name="Search Repositories",
+                        description="Search repositories on GitHub."
+                    )
+                ]
+
+            # Default: generate code
             return [
-
                 PlannerTask(
                     id="task_1",
-                    name="Analyze Problem",
-                    description="Understand coding problem."
-                ),
-
-                PlannerTask(
-                    id="task_2",
                     name="Generate Solution",
-                    description="Generate code.",
-                    depends_on=["task_1"]
-                ),
-
-                PlannerTask(
-                    id="task_3",
-                    name="Review Code",
-                    description="Review generated code.",
-                    depends_on=["task_2"]
-                ),
-
-                PlannerTask(
-                    id="task_4",
-                    name="Explain Solution",
-                    description="Explain implementation.",
-                    depends_on=["task_3"]
+                    description="Generate clean source code."
                 )
-
             ]
 
         elif domain == "education":

@@ -42,7 +42,7 @@ class DebuggerTool(BaseTool):
 
         description="Analyze runtime errors and prepare debugging.",
 
-        category=ToolCategory.DEVELOPER,
+        category=ToolCategory.OTHER,
 
         tags=[
             "coding",
@@ -63,69 +63,45 @@ class DebuggerTool(BaseTool):
         request: DebugRequest,
     ) -> ToolResult:
 
-        #
-        # Future Pipeline
-        #
-        # execution = PythonRunner.execute(...)
-        #
-        # stack = StackTraceParser.parse(
-        #     request.stack_trace
-        # )
-        #
-        # debugger = RuntimeDebugger(...)
-        #
-        # analysis = LLM.debug(
-        #     code=request.code,
-        #     stack_trace=request.stack_trace,
-        # )
-        #
+        from llm.router.model_router import ModelRouter
+
+        prompt = f"""
+You are an expert developer and debugging assistant.
+Analyze the following code and the provided stack trace / error details.
+Identify the source of the crash/bug, explain what caused it, and provide step-by-step instructions to debug and fix it.
+Language: {request.language}
+Stack Trace: {request.stack_trace or "None provided"}
+
+Code:
+{request.code}
+"""
+        router = ModelRouter()
+        success = True
+        message = "Debug analysis completed successfully."
+        try:
+            analysis = router.generate(prompt, request.stack_trace or "debug", "coding")
+        except Exception as e:
+            success = False
+            analysis = f"Failed to perform debug analysis: {e}"
+            message = f"Error during debug: {e}"
 
         result = {
-
             "language": request.language,
-
-            "stack_trace_provided":
-
-                request.stack_trace is not None,
-
-            "lines_of_code":
-
-                len(request.code.splitlines()),
-
-            "status":
-
-                "debug_analysis_pending",
-
-            "message": (
-
-                "Debug analysis will "
-
-                "be performed after "
-
-                "runtime integration."
-
-            ),
-
+            "stack_trace_provided": request.stack_trace is not None,
+            "lines_of_code": len(request.code.splitlines()),
+            "status": "completed" if success else "failed",
+            "analysis": analysis,
         }
 
         response = CodingResponse(
-
-            success=True,
-
-            message="Debug request prepared successfully.",
-
+            success=success,
+            message=message,
         )
 
         return ToolResult.ok(
-
             message=response.message,
-
             data={
-
                 "debug": result,
-
                 **response.model_dump(),
-
             },
-
         )

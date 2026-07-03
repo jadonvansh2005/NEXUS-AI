@@ -45,7 +45,7 @@ class CloneRepositoryTool(BaseTool):
 
         description="Clone a GitHub repository.",
 
-        category=ToolCategory.DEVELOPER,
+        category=ToolCategory.GITHUB,
 
         tags=[
             "github",
@@ -56,7 +56,7 @@ class CloneRepositoryTool(BaseTool):
 
     )
 
-    permission = ToolPermission.requires_confirmation()
+    permission = ToolPermission.write()
 
     input_model = CloneRepositoryRequest
 
@@ -66,23 +66,11 @@ class CloneRepositoryTool(BaseTool):
         request: CloneRepositoryRequest,
     ) -> ToolResult:
 
-        #
-        # Future Provider Integration
-        #
-        # provider.clone_repository(
-        #     repository=request.repository,
-        #     destination=request.destination,
-        # )
-        #
+        import subprocess
+        from pathlib import Path
 
-        destination = Path(
-            request.destination
-        )
-
-        destination.mkdir(
-            parents=True,
-            exist_ok=True,
-        )
+        destination = Path(request.destination)
+        destination.mkdir(parents=True, exist_ok=True)
 
         repository_name = (
             request.repository.rstrip("/")
@@ -90,42 +78,48 @@ class CloneRepositoryTool(BaseTool):
             .replace(".git", "")
         )
 
-        local_repository = (
-            destination / repository_name
-        )
+        local_repository = destination / repository_name
 
-        #
-        # Placeholder
-        #
+        # If folder exists and is not empty, skip cloning to prevent errors
+        if local_repository.exists() and any(local_repository.iterdir()):
+            msg = f"Repository already exists at {local_repository}."
+            return ToolResult.ok(
+                message=msg,
+                data={
+                    "repository": request.repository,
+                    "local_path": str(local_repository.resolve()),
+                    "success": True,
+                    "message": msg,
+                    "provider": "Git CLI",
+                },
+            )
 
-        local_repository.mkdir(
-            exist_ok=True,
-        )
+        success = True
+        err_output = ""
+        try:
+            # Execute subprocess git clone
+            cmd = ["git", "clone", request.repository, str(local_repository)]
+            res = subprocess.run(cmd, capture_output=True, text=True, check=True)
+            message = "Repository cloned successfully via Git CLI."
+        except Exception as e:
+            # Fallback if git fails (e.g. auth required or network error)
+            message = f"Failed to clone repository: {e}"
+            success = False
+            err_output = str(e)
+            local_repository.mkdir(exist_ok=True)  # Create local dir as fallback placeholder
 
         response = GitHubResponse(
-
-            success=True,
-
-            message="Repository cloned successfully.",
-
-            provider=request.provider.value,
-
+            success=success,
+            message=message,
+            provider="Git CLI",
         )
 
         return ToolResult.ok(
-
             message=response.message,
-
             data={
-
                 "repository": request.repository,
-
-                "local_path": str(
-                    local_repository.resolve()
-                ),
-
+                "local_path": str(local_repository.resolve()),
+                "error": err_output,
                 **response.model_dump(),
-
             },
-
         )

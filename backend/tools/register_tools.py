@@ -26,6 +26,24 @@ from tools.email.search_email_tool import SearchEmailTool
 from tools.email.draft_email_tool import DraftEmailTool
 from tools.email.attachment_tool import AttachmentTool
 
+# GitHub imports
+from tools.github.clone_repo_tool import CloneRepositoryTool
+from tools.github.commit_tool import CommitTool
+from tools.github.push_tool import PushTool
+from tools.github.repo_search_tool import RepositorySearchTool
+from tools.github.create_pr_tool import CreatePullRequestTool
+from tools.github.issue_tool import IssueTool
+
+# Coding imports
+from tools.coding.bug_fixer_tool import BugFixTool
+from tools.coding.debugger_tool import DebuggerTool
+from tools.coding.dependency_analyzer_tool import DependencyAnalyzerTool
+from tools.coding.documentation_tool import DocumentationTool
+from tools.coding.git_assistant_tool import GitAssistantTool
+from tools.coding.project_generator_tool import ProjectGeneratorTool
+from tools.coding.refactor_tool import RefactorTool
+from tools.coding.test_generator_tool import TestGeneratorTool
+
 registry = ToolRegistry()
 
 # 1. Dataset Analyzer Tool (Data Science)
@@ -250,5 +268,125 @@ registry.register_tool(
     tool=AttachmentTool(),
     domain="communication",
     capabilities=["download_attachments"],
+    providers=["generic"]
+)
+
+# ==========================================================
+# GitHub Tools Registrations
+# ==========================================================
+
+registry.register_tool(
+    name="github.clone",
+    tool=CloneRepositoryTool(),
+    domain="coding",
+    capabilities=["clone_repo"],
+    providers=["generic"]
+)
+
+registry.register_tool(
+    name="github.commit",
+    tool=CommitTool(),
+    domain="coding",
+    capabilities=["commit_changes"],
+    providers=["generic"]
+)
+
+registry.register_tool(
+    name="github.push",
+    tool=PushTool(),
+    domain="coding",
+    capabilities=["push_changes"],
+    providers=["generic"]
+)
+
+registry.register_tool(
+    name="github.search",
+    tool=RepositorySearchTool(),
+    domain="coding",
+    capabilities=["search_repositories"],
+    providers=["generic"]
+)
+
+registry.register_tool(
+    name="github.pull_request",
+    tool=CreatePullRequestTool(),
+    domain="coding",
+    capabilities=["create_pr"],
+    providers=["generic"]
+)
+
+registry.register_tool(
+    name="github.issue",
+    tool=IssueTool(),
+    domain="coding",
+    capabilities=["create_issue"],
+    providers=["generic"]
+)
+
+# ==========================================================
+# Remaining Coding Tools Registrations
+# ==========================================================
+
+registry.register_tool(
+    name="coding.bug_fixer",
+    tool=BugFixTool(),
+    domain="coding",
+    capabilities=["fix_bugs"],
+    providers=["generic"]
+)
+
+registry.register_tool(
+    name="coding.debugger",
+    tool=DebuggerTool(),
+    domain="coding",
+    capabilities=["debug_code"],
+    providers=["generic"]
+)
+
+registry.register_tool(
+    name="coding.dependency_analyzer",
+    tool=DependencyAnalyzerTool(),
+    domain="coding",
+    capabilities=["analyze_dependencies"],
+    providers=["generic"]
+)
+
+registry.register_tool(
+    name="coding.documentation",
+    tool=DocumentationTool(),
+    domain="coding",
+    capabilities=["generate_documentation"],
+    providers=["generic"]
+)
+
+registry.register_tool(
+    name="coding.git_assistant",
+    tool=GitAssistantTool(),
+    domain="coding",
+    capabilities=["git_assistance"],
+    providers=["generic"]
+)
+
+registry.register_tool(
+    name="coding.project_generator",
+    tool=ProjectGeneratorTool(),
+    domain="coding",
+    capabilities=["generate_project"],
+    providers=["generic"]
+)
+
+registry.register_tool(
+    name="coding.refactor",
+    tool=RefactorTool(),
+    domain="coding",
+    capabilities=["refactor_code"],
+    providers=["generic"]
+)
+
+registry.register_tool(
+    name="coding.test_generator",
+    tool=TestGeneratorTool(),
+    domain="coding",
+    capabilities=["generate_tests"],
     providers=["generic"]
 )

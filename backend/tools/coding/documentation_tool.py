@@ -43,7 +43,7 @@ class DocumentationTool(BaseTool):
 
         description="Generate documentation for source code.",
 
-        category=ToolCategory.DEVELOPER,
+        category=ToolCategory.OTHER,
 
         tags=[
             "documentation",
@@ -64,65 +64,43 @@ class DocumentationTool(BaseTool):
         request: DocumentationRequest,
     ) -> ToolResult:
 
-        #
-        # Future Pipeline
-        #
-        # parser = ASTParser(...)
-        #
-        # structure = parser.parse(
-        #     request.code
-        # )
-        #
-        # documentation = LLM.generate_documentation(
-        #     code=request.code,
-        #     language=request.language,
-        # )
-        #
-        # READMEGenerator(...)
-        #
-        # FileTool.write(...)
-        #
+        from llm.router.model_router import ModelRouter
+
+        prompt = f"""
+You are an expert developer and technical writer.
+Generate complete and clear documentation for the following source code.
+Create inline docstrings/comments directly inside the code if helpful, or return a Markdown document explaining the modules, classes, and functions.
+Language: {request.language}
+
+Code:
+{request.code}
+"""
+        router = ModelRouter()
+        success = True
+        message = "Documentation generated successfully."
+        try:
+            documentation = router.generate(prompt, request.code, "coding")
+        except Exception as e:
+            success = False
+            documentation = f"Failed to generate documentation: {e}"
+            message = f"Error during documentation generation: {e}"
 
         result = {
-
             "language": request.language,
-
-            "lines_of_code": len(
-                request.code.splitlines()
-            ),
-
-            "status": "documentation_generation_pending",
-
-            "message": (
-
-                "Documentation generation "
-
-                "will be performed after "
-
-                "LLM integration."
-
-            ),
-
+            "lines_of_code": len(request.code.splitlines()),
+            "status": "completed" if success else "failed",
+            "documentation": documentation,
         }
 
         response = CodingResponse(
-
-            success=True,
-
-            message="Documentation request prepared successfully.",
-
+            success=success,
+            message=message,
         )
 
         return ToolResult.ok(
-
             message=response.message,
-
             data={
-
                 "documentation": result,
-
                 **response.model_dump(),
-
             },
-
         )

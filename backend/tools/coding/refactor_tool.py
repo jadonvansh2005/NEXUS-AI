@@ -42,7 +42,7 @@ class RefactorTool(BaseTool):
 
         description="Improve code structure while preserving behavior.",
 
-        category=ToolCategory.DEVELOPER,
+        category=ToolCategory.OTHER,
 
         tags=[
             "coding",
@@ -63,68 +63,48 @@ class RefactorTool(BaseTool):
         request: RefactorRequest,
     ) -> ToolResult:
 
-        #
-        # Future Pipeline
-        #
-        # parser = ASTParser.parse(...)
-        #
-        # review = CodeReviewer(...)
-        #
-        # refactor = LLM.refactor(
-        #     code=request.code,
-        #     language=request.language,
-        #     objective=request.objective,
-        # )
-        #
-        # tests = TestGenerator(...)
-        #
-        # PythonRunner.execute(...)
-        #
-        # GitAssistant.commit(...)
-        #
+        from llm.router.model_router import ModelRouter
+
+        prompt = f"""
+You are an expert software architect and developer.
+Refactor the following code to improve its structure, performance, readability, or maintainability based on the objective:
+Objective: {request.objective}
+Language: {request.language}
+
+Provide:
+1. A summary of the changes made.
+2. The complete refactored source code.
+
+Code:
+{request.code}
+"""
+        router = ModelRouter()
+        success = True
+        message = "Code refactoring completed successfully."
+        try:
+            refactored_code = router.generate(prompt, request.objective, "coding")
+        except Exception as e:
+            success = False
+            refactored_code = f"Failed to refactor code: {e}"
+            message = f"Error during refactoring: {e}"
 
         result = {
-
             "language": request.language,
-
             "objective": request.objective,
-
-            "lines_of_code": len(
-                request.code.splitlines()
-            ),
-
-            "status": "refactoring_pending",
-
-            "message": (
-
-                "Code refactoring will "
-
-                "be performed after "
-
-                "LLM integration."
-
-            ),
-
+            "lines_of_code": len(request.code.splitlines()),
+            "status": "completed" if success else "failed",
+            "refactor": refactored_code,
         }
 
         response = CodingResponse(
-
-            success=True,
-
-            message="Refactoring request prepared successfully.",
-
+            success=success,
+            message=message,
         )
 
         return ToolResult.ok(
-
             message=response.message,
-
             data={
-
                 "refactor": result,
-
                 **response.model_dump(),
-
             },
-
         )
