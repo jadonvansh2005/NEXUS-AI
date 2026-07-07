@@ -81,38 +81,58 @@ class RetrievalRouter:
     # --------------------------------------------------
 
     def classify_query(self, query: str) -> List[str]:
+        import re
         query_lower = query.lower()
         routes = []
 
+        def match_keyword(keywords) -> bool:
+            for kw in keywords:
+                pattern = r"\b" + re.escape(kw) + r"\b"
+                if re.search(pattern, query_lower):
+                    return True
+            return False
+
         # 1. Document Routing
         doc_keywords = ["document", "pdf", "file", "csv", "excel", "xlsx", "chapter", "summarize", "docx", "paper", "text file", "read file", "uploaded"]
-        if any(kw in query_lower for kw in doc_keywords):
+        if match_keyword(doc_keywords):
             routes.append("document")
 
         # 2. Code Routing
         code_keywords = ["code", "function", "class", "method", "variable", "python", "javascript", "react", "typescript", "fastapi", "implement", "repository", "github", "file structure", "backend", "frontend", "login", "auth", "api", "route"]
-        if any(kw in query_lower for kw in code_keywords):
+        if match_keyword(code_keywords):
             routes.append("code")
 
         # 3. Project Routing
         project_keywords = ["project", "upss", "architecture", "system design", "workflow", "roadmap", "tech stack", "agents", "multi-agent", "orchestrator", "planner", "reporting", "model router"]
-        if any(kw in query_lower for kw in project_keywords):
+        if match_keyword(project_keywords):
             routes.append("project")
 
         # 4. Conversation Routing
         conv_keywords = ["conversation", "discuss", "chat", "history", "previous", "earlier", "last time", "we talked", "you said", "i said"]
-        if any(kw in query_lower for kw in conv_keywords):
+        if match_keyword(conv_keywords):
             routes.append("conversation")
 
         # 5. Semantic Routing (user preference)
         semantic_keywords = ["my name", "who am i", "my preference", "i prefer", "user preference", "my info", "profile", "about me"]
-        if any(kw in query_lower for kw in semantic_keywords):
+        if match_keyword(semantic_keywords):
             routes.append("semantic")
 
         # 6. Knowledge Routing (policies, general company facts)
         knowledge_keywords = ["policy", "sop", "faq", "hr", "company", "employee", "guidelines", "rules", "organization"]
-        if any(kw in query_lower for kw in knowledge_keywords):
+        if match_keyword(knowledge_keywords):
             routes.append("knowledge")
+
+        # Strict document override: if the user explicitly references "this file/pdf/document"
+        # or "uploaded file/pdf/document", route ONLY to the document pipeline to avoid
+        # conflicts with internal system code or project database.
+        document_pointers = [
+            "this file", "this pdf", "this document", "this csv", "this docx",
+            "uploaded file", "uploaded pdf", "uploaded document", "uploaded csv",
+            "in the file", "in the pdf", "in the document", "in the csv",
+            "in this file", "in this pdf", "in this document"
+        ]
+        if any(ptr in query_lower for ptr in document_pointers):
+            routes = ["document"]
 
         # If no specific route matched, try Gemini classification
         if not routes:

@@ -22,7 +22,7 @@ class TaskClassifier:
                 "python", "java", "c++", "javascript", "typescript", "react",
                 "nextjs", "fastapi", "flask", "django", "api", "backend",
                 "frontend", "website", "software", "algorithm", "git", "github",
-                "docker"
+                "docker", "kubernetes", "cloud", "aws", "azure", "gcp", "ci/cd", "unit test","push", "pull request", "merge request", "refactor", "optimize", "performance","code review", "lint", "format", "compile", "execute", "run", "script", "library", "framework", "package", "dependency", "version control", "repository", "branch", "commit", "tag", "release", "build", "deploy", "integration", "continuous integration", "continuous deployment"
             ]
         ):
             return "coding"

@@ -83,6 +83,8 @@ class WorkflowState(BaseModel):
         default_factory=dict
     )
 
+    file_path: str = ""
+
     # ======================================================
     # Helpers
     # ======================================================

@@ -4,62 +4,61 @@ from sklearn.model_selection import (
     train_test_split
 )
 
-from sklearn.preprocessing import (
-    LabelEncoder
+from tools.ds_tools.dataset_analyzer import (
+    DatasetAnalyzer
+)
+
+from tools.ds_tools.dataset_insight_generator import (
+    DatasetInsightGenerator
+)
+
+from tools.ds_tools.dataset_type_detector import (
+    DatasetTypeDetector
 )
 
 from tools.ds_tools.target_detector import (
     TargetDetector
 )
 
+from tools.ml_tools.data_cleaner import (
+    DataCleaner
+)
+
+from tools.ml_tools.feature_engineer import (
+    FeatureEngineer
+)
+
 from tools.ml_tools.model_trainer import (
     ModelTrainer
 )
 
-# from tools.ml_tools.nlp_detector import (
-#     NLPDetector
-# )
-
 from tools.ml_tools.model_evaluator import (
     ModelEvaluator
-)
-
-from tools.ml_tools.model_manager import (
-    ModelManager
 )
 
 from tools.ml_tools.model_selector import (
     ModelSelector
 )
 
+from tools.ml_tools.model_manager import (
+    ModelManager
+)
+
 from tools.ml_tools.pipeline_manager import (
     PipelineManager
-)
-
-from tools.ml_tools.data_cleaner import (
-    DataCleaner
-)
-
-# from tools.ml_tools.nlp_detector import (
-#     NLPDetector
-# )
-
-from tools.ml_tools.feature_engineer import (
-    FeatureEngineer
 )
 
 from tools.ml_tools.top_model_optimizer import (
     TopModelOptimizer
 )
 
-# from tools.nlp_tools.nlp_automl_engine import (
-#     NLPAutoMLEngine
-# )
-
 from tools.ml_tools.explainability_engine import (
     ExplainabilityEngine
 )
 
+from tools.nlp_tools.nlp_automl_engine import (
+    NLPAutoMLEngine
+)
 
 
 class AutoMLEngine:
@@ -69,203 +68,259 @@ class AutoMLEngine:
         file_path: str
     ):
 
-        # ------------------
-        # Load Dataset
-        # ------------------
+        print("\n========== AUTOML START ==========\n")
+
+        # =====================================
+        # LOAD DATASET
+        # =====================================
 
         df = pd.read_csv(
             file_path
         )
 
-        # print("\n===== DATAFRAME INFO =====")
-        # print(df.head())
-        # print("\nDTYPES:")
-        # print(df.dtypes)
-        # print("=========================\n")
-
-        # nlp_detector = (
-        #     NLPDetector()
-        # )
-
-        # nlp_result = (
-        #     nlp_detector.detect(
-        #         df
-        #     )
-        # )
-
-        # if nlp_result["is_nlp"]:
-
-        #     print(
-        #         "\nNLP Dataset Detected"
-        #     )
-
-        #     # from tools.nlp_tools.nlp_automl_engine import (
-        #     #     NLPAutoMLEngine
-        #     # )
-
-        #     nlp_engine = (
-        #         NLPAutoMLEngine()
-        #     )
-
-        #     return nlp_engine.run(
-        #         df
-        #     )
-
-        # cleaner = (
-        #     DataCleaner()
-        # )
-
-        # df = cleaner.clean(
-        #     df
-        # )
-
-        # print("\n===== NLP DEBUG =====")
-        # print(nlp_result)
-        # print("=====================")
-
-        # ------------------
-        # Detect Target
-        # ------------------
-
-        detector = (
-            TargetDetector()
+        print(
+            f"Dataset Loaded : {len(df)} rows x {len(df.columns)} columns"
         )
 
-        # detection = (
-        #     detector.detect(
-        #         file_path
-        #     )
-        # )
+        # =====================================
+        # DATASET ANALYSIS
+        # =====================================
 
-        detection = (
-            detector.detect(
-                df
+        analyzer = DatasetAnalyzer()
+
+        dataset_report = analyzer.analyze(
+            file_path
+        )
+
+        print(
+            "Dataset Analysis Completed."
+        )
+
+        # =====================================
+        # DATASET INSIGHTS
+        # =====================================
+
+        insight_generator = (
+            DatasetInsightGenerator()
+        )
+
+        dataset_insights = (
+            insight_generator.generate(
+                dataset_report
             )
         )
 
-        target = (
-            detection["target"]
-        )
-
-        explainer = (
-            ExplainabilityEngine()
-        )
-
-        problem_type = (
-            detection[
-                "problem_type"
-            ]
-        )
-
-
-        print("\n========== TARGET DEBUG ==========")
-
         print(
-            "TARGET COLUMN:",
-            target
+            "Dataset Insights Generated."
+        )
+
+        # =====================================
+        # DATA CLEANING
+        # =====================================
+
+        cleaner = DataCleaner()
+
+        df = cleaner.clean(
+            df
         )
 
         print(
-            "PROBLEM TYPE:",
-            problem_type
+            "Data Cleaning Completed."
         )
 
-        print(
-            "TARGET DTYPE:",
-            df[target].dtype
+        # =====================================
+        # TARGET DETECTION
+        # =====================================
+
+        detector = TargetDetector()
+
+        detection = detector.detect(
+            df
         )
 
-        print(
-            "UNIQUE VALUES:",
-            df[target].nunique()
+        target = detection[
+            "target"
+        ]
+
+        problem_type = detection[
+            "problem_type"
+        ]
+
+        # =====================================
+        # DATASET TYPE DETECTION
+        # =====================================
+
+        dataset_detector = (
+            DatasetTypeDetector()
         )
 
-        print(
-            "\nTARGET SAMPLE:"
+        dataset_type = (
+            dataset_detector.detect(
+                df,
+                target
+            )
         )
 
-        print(
-            df[target]
-            .head(20)
-            .tolist()
+        print("\n========== DATASET TYPE ==========")
+
+        print(dataset_type)
+
+        print("==================================")
+
+        # =====================================
+        # NLP ROUTING
+        # =====================================
+
+        if dataset_type["is_nlp"]:
+
+            print(
+                "Routing Dataset To NLP Pipeline..."
+            )
+
+            nlp_engine = (
+                NLPAutoMLEngine()
+            )
+
+            return nlp_engine.run(
+                df,
+                dataset_type["text_columns"]
+            )
+
+            nlp_result[
+                "dataset_type"
+            ] = dataset_type
+
+            nlp_result[
+                "dataset_report"
+            ] = dataset_report
+
+            nlp_result[
+                "dataset_insights"
+            ] = dataset_insights
+
+            return nlp_result
+
+        # =====================================
+        # FEATURE ENGINEERING
+        # =====================================
+
+        feature_engineer = (
+            FeatureEngineer()
         )
 
-        print(
-            "==================================\n"
-        )
+        processed = (
+            feature_engineer.process(
 
-        # ------------------
-        # Encode Categories
-        # ------------------
+                df,
 
-        engine = FeatureEngineer()
+                target,
 
-        processed = engine.process(
-            df,
-            target,
-            problem_type
-        )
+                problem_type
 
-        scaler = (
-            processed["scaler"]
+            )
         )
 
         X = processed["X"]
 
         y = processed["y"]
 
-        feature_scores = (
-            processed["feature_scores"]
+        scaler = processed["scaler"]
+
+        feature_scores = processed[
+            "feature_scores"
+        ]
+
+        print(
+            f"Total Features : {len(X.columns)}"
         )
 
-        
-        # ------------------
-        # Split Data
-        # ------------------
-
-       
+        # =====================================
+        # TRAIN TEST SPLIT
+        # =====================================
 
         X_train, X_test, y_train, y_test = (
+
             train_test_split(
+
                 X,
+
                 y,
-                test_size=0.2,
+
+                test_size=0.20,
+
                 random_state=42
+
             )
+
         )
 
-        # ------------------
-        # Train Models
-        # ------------------
+        print(
+            "Train/Test Split Completed."
+        )
+
+        # =====================================
+        # TRAIN MODELS
+        # =====================================
 
         trainer = (
             ModelTrainer()
         )
 
         models = (
+
             trainer.train_models(
+
                 X_train,
+
                 y_train,
+
                 problem_type
+
             )
+
         )
 
-        # ------------------
-        # Evaluate Models
-        # ------------------
+        print(
+            f"{len(models)} Models Trained Successfully."
+        )
+
+        # =====================================
+        # EVALUATE MODELS
+        # =====================================
 
         evaluator = (
             ModelEvaluator()
         )
 
         results = (
+
             evaluator.evaluate(
+
                 models,
+
                 X_test,
+
                 y_test,
+
                 problem_type
+
             )
+
         )
+
+        print(
+            "\n========== MODEL RESULTS =========="
+        )
+
+        print(results)
+
+        print(
+            "===================================\n"
+        )
+
+        # =====================================
+        # LEADERBOARD
+        # =====================================
 
         if problem_type == "classification":
 
@@ -273,10 +328,10 @@ class AutoMLEngine:
 
                 results.items(),
 
-                key=lambda x:
-                x[1]["Accuracy"],
+                key=lambda x: x[1]["Accuracy"],
 
                 reverse=True
+
             )
 
         else:
@@ -285,21 +340,55 @@ class AutoMLEngine:
 
                 results.items(),
 
-                key=lambda x:
-                x[1]["R2"],
+                key=lambda x: x[1]["R2"],
 
                 reverse=True
+
             )
+
+        print(
+            "\n========== LEADERBOARD =========="
+        )
+
+        for rank, item in enumerate(
+
+            leaderboard,
+
+            start=1
+
+        ):
+
+            print(
+
+                rank,
+
+                item[0],
+
+                item[1]
+
+            )
+
+        print(
+            "=================================\n"
+        )
+
+        # =====================================
+        # TOP 3 MODELS
+        # =====================================
 
         top_models = [
 
-            model[0]
+            model_name
 
-            for model
+            for model_name, _
 
             in leaderboard[:3]
 
         ]
+
+        # =====================================
+        # HYPERPARAMETER OPTIMIZATION
+        # =====================================
 
         optimizer = (
             TopModelOptimizer()
@@ -321,35 +410,55 @@ class AutoMLEngine:
 
         )
 
-        # ------------------
-        # Select Best
-        # ------------------
+        # =====================================
+        # BEST MODEL
+        # =====================================
 
         selector = (
             ModelSelector()
         )
 
-        print("\nRESULTS:")
-        print(results)
-
         best_model = (
+
             selector.select_best(
+
                 results,
+
                 problem_type
+
             )
+
         )
+
+        print(
+            f"\nBest Model : {best_model}"
+        )
+
+        # =====================================
+        # SAVE MODEL
+        # =====================================
 
         manager = (
             ModelManager()
         )
 
-        saved_path = (
+        saved_model_path = (
+
             manager.save_model(
-                models[best_model],
+
+                models[
+                    best_model
+                ],
+
                 best_model
+
             )
+
         )
 
+        # =====================================
+        # SAVE PIPELINE
+        # =====================================
 
         pipeline = {
 
@@ -357,7 +466,21 @@ class AutoMLEngine:
                 scaler,
 
             "columns":
-                list(X.columns)
+                list(
+                    X.columns
+                ),
+
+            "target":
+                target,
+
+            "problem_type":
+                problem_type,
+
+            "dataset_type":
+                dataset_type[
+                    "dataset_type"
+                ]
+
         }
 
         pipeline_manager = (
@@ -369,12 +492,19 @@ class AutoMLEngine:
             pipeline,
 
             best_model
+
         )
+
+        # =====================================
+        # SAVE METADATA
+        # =====================================
 
         metadata = {
 
             "feature_names":
-                list(X.columns),
+                list(
+                    X.columns
+                ),
 
             "target":
                 target,
@@ -382,40 +512,67 @@ class AutoMLEngine:
             "problem_type":
                 problem_type,
 
+            "dataset_type":
+                dataset_type[
+                    "dataset_type"
+                ],
+
             "feature_scores":
                 feature_scores
+
         }
 
         metadata_path = (
+
             manager.save_metadata(
+
                 best_model,
+
                 metadata
+
             )
+
+        )
+
+        # =====================================
+        # EXPLAINABILITY
+        # =====================================
+
+        explainer = (
+            ExplainabilityEngine()
         )
 
         model_importance = (
+
             explainer.explain(
-                models[best_model],
+
+                models[
+                    best_model
+                ],
+
                 X.columns
+
             )
+
         )
 
         print(
-            "\nSELECTED MODEL:",
-            best_model
+            "\n========== AUTOML COMPLETED ==========\n"
         )
-
-        # best_model = (
-        #     selector.select_best(
-        #         results,
-        #         problem_type
-        #     )
-        # )
 
         return {
 
             "problem_type":
                 problem_type,
+
+            "dataset_type":
+                dataset_type,
+
+            "dataset_report":
+                dataset_report,
+
+            "dataset_insights":
+                dataset_insights,
 
             "target":
                 target,
@@ -423,27 +580,28 @@ class AutoMLEngine:
             "results":
                 results,
 
-            "feature_scores":
-                feature_scores,
+            "leaderboard":
+                leaderboard,
 
             "best_model":
                 best_model,
-
-            "saved_model_path":
-                saved_path,
-
-            "leaderboard":
-                leaderboard,
 
             "top_models":
                 top_models,
 
             "tuned_results":
                 tuned_results,
-            
-            "metadata_path":
-                metadata_path,
+
+            "feature_scores":
+                feature_scores,
 
             "model_importance":
-                model_importance
+                model_importance,
+
+            "saved_model_path":
+                saved_model_path,
+
+            "metadata_path":
+                metadata_path
+
         }

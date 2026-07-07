@@ -5,7 +5,23 @@ from tools.travel.itinerary_tool import ItineraryTool
 from tools.travel.train_search_tool import TrainSearchTool
 from tools.travel.hotel_search_tool import HotelSearchTool
 from tools.travel.flight_search_tool import FlightSearchTool
+from tools.travel.booking_tool import BookingTool
+from tools.travel.budget_tool import BudgetTool
+from tools.travel.currency_converter_tool import CurrencyConverterTool
+from tools.travel.fare_estimator_tool import FareEstimatorTool
+from tools.travel.flight_cancellation_tool import FlightCancellationTool
+from tools.travel.hotel_cancellation_tool import HotelCancellationTool
+from tools.travel.nearby_places_tool import NearbyPlacesTool
+from tools.travel.packing_list_tool import PackingListTool
+from tools.travel.price_compare_tool import PriceCompareTool
+from tools.travel.train_cancellation_tool import TrainCancellationTool
+from tools.travel.trip_summary_tool import TripSummaryTool
+from tools.travel.visa_tool import VisaTool
 from tools.browser.webpage_reader_tool import WebPageReaderTool
+from tools.browser.browser_search_tool import BrowserSearchTool
+from tools.browser.screenshot_tool import ScreenshotTool
+from tools.browser.download_tool import DownloadTool
+from tools.browser.browser_history_tool import BrowserHistoryTool
 from tools.search.web_search_tool import WebSearchTool
 from tools.coding.code_generator_tool import CodeGeneratorTool
 from tools.coding.code_reviewer_tool import CodeReviewerTool
@@ -91,6 +107,114 @@ registry.register_tool(
     providers=["generic"]
 )
 
+# 5a. Booking Tool (Travel)
+registry.register_tool(
+    name="travel.booking",
+    tool=BookingTool(),
+    domain="travel",
+    capabilities=["booking"],
+    providers=["generic"]
+)
+
+# 5b. Budget Tool (Travel)
+registry.register_tool(
+    name="travel.budget",
+    tool=BudgetTool(),
+    domain="travel",
+    capabilities=["estimate_budget"],
+    providers=["generic"]
+)
+
+# 5c. Currency Converter Tool (Travel)
+registry.register_tool(
+    name="travel.currency_converter",
+    tool=CurrencyConverterTool(),
+    domain="travel",
+    capabilities=["currency_conversion"],
+    providers=["generic"]
+)
+
+# 5d. Fare Estimator Tool (Travel)
+registry.register_tool(
+    name="travel.fare_estimator",
+    tool=FareEstimatorTool(),
+    domain="travel",
+    capabilities=["fare_estimation"],
+    providers=["generic"]
+)
+
+# 5e. Flight Cancellation Tool (Travel)
+registry.register_tool(
+    name="travel.flight_cancellation",
+    tool=FlightCancellationTool(),
+    domain="travel",
+    capabilities=["cancel_flight"],
+    providers=["generic"]
+)
+
+# 5f. Hotel Cancellation Tool (Travel)
+registry.register_tool(
+    name="travel.hotel_cancellation",
+    tool=HotelCancellationTool(),
+    domain="travel",
+    capabilities=["cancel_hotel"],
+    providers=["generic"]
+)
+
+# 5g. Nearby Places Tool (Travel)
+registry.register_tool(
+    name="travel.nearby_places",
+    tool=NearbyPlacesTool(),
+    domain="travel",
+    capabilities=["nearby_places"],
+    providers=["generic"]
+)
+
+# 5h. Packing List Tool (Travel)
+registry.register_tool(
+    name="travel.packing_list",
+    tool=PackingListTool(),
+    domain="travel",
+    capabilities=["packing_list"],
+    providers=["generic"]
+)
+
+# 5i. Price Compare Tool (Travel)
+registry.register_tool(
+    name="travel.price_compare",
+    tool=PriceCompareTool(),
+    domain="travel",
+    capabilities=["compare_prices"],
+    providers=["generic"]
+)
+
+# 5j. Train Cancellation Tool (Travel)
+registry.register_tool(
+    name="travel.train_cancellation",
+    tool=TrainCancellationTool(),
+    domain="travel",
+    capabilities=["cancel_train"],
+    providers=["generic"]
+)
+
+# 5k. Trip Summary Tool (Travel)
+registry.register_tool(
+    name="travel.trip_summary",
+    tool=TripSummaryTool(),
+    domain="travel",
+    capabilities=["trip_summary"],
+    providers=["generic"]
+)
+
+# 5l. Visa Tool (Travel)
+registry.register_tool(
+    name="travel.visa",
+    tool=VisaTool(),
+    domain="travel",
+    capabilities=["visa_info"],
+    providers=["generic"]
+)
+
 # 6. Webpage Reader Tool (Research / Browser)
 registry.register_tool(
     name="browser.reader",
@@ -106,6 +230,42 @@ registry.register_tool(
     tool=WebSearchTool(),
     domain="research",
     capabilities=["web_search"],
+    providers=["generic"]
+)
+
+# Browser Search Tool (General)
+registry.register_tool(
+    name="browser.search",
+    tool=BrowserSearchTool(),
+    domain="general",
+    capabilities=["browser_search"],
+    providers=["generic"]
+)
+
+# Browser Screenshot Tool (General)
+registry.register_tool(
+    name="browser.screenshot",
+    tool=ScreenshotTool(),
+    domain="general",
+    capabilities=["capture_screenshot"],
+    providers=["generic"]
+)
+
+# Browser Download Tool (General)
+registry.register_tool(
+    name="browser.download",
+    tool=DownloadTool(),
+    domain="general",
+    capabilities=["download_file"],
+    providers=["generic"]
+)
+
+# Browser History Tool (General)
+registry.register_tool(
+    name="browser.history",
+    tool=BrowserHistoryTool(),
+    domain="general",
+    capabilities=["browser_history"],
     providers=["generic"]
 )
 

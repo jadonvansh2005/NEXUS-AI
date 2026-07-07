@@ -66,9 +66,13 @@ class DependencyResolver:
 
                     WorkflowTaskStatus.RUNNING,
 
+                    
+
                     WorkflowTaskStatus.COMPLETED,
 
                     WorkflowTaskStatus.FAILED,
+
+                    # WorkflowTaskStatus.WAITING,
 
                 ]:
                     continue

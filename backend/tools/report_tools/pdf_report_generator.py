@@ -252,9 +252,10 @@ class PDFReportGenerator:
 
             for feature, score in list(
 
-                automl_result[
-                    "feature_scores"
-                ].items()
+                automl_result.get(
+                    "feature_scores",
+                    {}
+                ).items()
 
             )[:10]:
 
@@ -341,7 +342,7 @@ class PDFReportGenerator:
 
         for chart in model_charts.values():
 
-            if os.path.exists(
+            if chart and os.path.exists(
                 chart
             ):
 

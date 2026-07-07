@@ -96,9 +96,37 @@ class SendEmailTool(BaseTool):
 
         if sender_email and sender_password:
             try:
+                # Query user details dynamically to set From display name and Reply-To
+                from database.connection import SessionLocal
+                from models.user import User
+
+                db = SessionLocal()
+                user_name = "User"
+                user_email = None
+                try:
+                    try:
+                        uid = int(context.user_id) if context.user_id else 1
+                    except ValueError:
+                        uid = 1
+                    user = db.query(User).filter(User.id == uid).first()
+                    if user:
+                        user_name = user.name
+                        user_email = user.email
+                except Exception as db_err:
+                    print(f"Error fetching user for SendEmailTool: {db_err}")
+                finally:
+                    db.close()
+
                 # Prepare MIMEMultipart email message
                 msg = MIMEMultipart()
-                msg["From"] = sender_email
+                
+                # Format: "User Name (via UPSS)" <no-reply@upss.com>
+                msg["From"] = f'"{user_name} (via UPSS)" <no-reply@upss.com>'
+                
+                # Format: Reply-To points to the real logged-in user email
+                if user_email:
+                    msg["Reply-To"] = user_email
+                
                 msg["To"] = ", ".join(request.to)
                 if request.cc:
                     msg["Cc"] = ", ".join(request.cc)
@@ -108,19 +136,44 @@ class SendEmailTool(BaseTool):
                 body_type = "html" if request.html else "plain"
                 msg.attach(MIMEText(request.body, body_type))
 
-                # Handle file attachments
+                # Handle file attachments with Auto-Healing search support
                 if request.attachments:
                     for filepath in request.attachments:
-                        if os.path.exists(filepath):
-                            with open(filepath, "rb") as f:
+                        actual_path = filepath
+                        # If relative path, try joining with uploads/datasets/ first
+                        if not os.path.isabs(actual_path) and not os.path.exists(actual_path):
+                            dataset_path = os.path.join("uploads", "datasets", filepath)
+                            if os.path.exists(dataset_path):
+                                actual_path = dataset_path
+
+                        if not os.path.exists(actual_path):
+                            # Try searching inside the uploads/ folder recursively
+                            filename = os.path.basename(filepath)
+                            for root_dir, _, files in os.walk("uploads"):
+                                if filename in files:
+                                    actual_path = os.path.join(root_dir, filename)
+                                    print(f"📧 Auto-healed email attachment path: found '{filename}' at '{actual_path}'", flush=True)
+                                    break
+
+                        print(f"\n--- DEBUG Check 2 & 3 (Email Tool) ---", flush=True)
+                        print(f"attachment_path (resolved): {actual_path}", flush=True)
+                        print(f"os.path.exists(attachment_path): {os.path.exists(actual_path)}", flush=True)
+
+                        if os.path.exists(actual_path):
+                            with open(actual_path, "rb") as f:
                                 part = MIMEBase("application", "octet-stream")
                                 part.set_payload(f.read())
                                 encoders.encode_base64(part)
                                 part.add_header(
                                     "Content-Disposition",
-                                    f"attachment; filename= {os.path.basename(filepath)}",
+                                    f"attachment; filename= {os.path.basename(actual_path)}",
                                 )
                                 msg.attach(part)
+
+                print(f"\n--- DEBUG Check 4 (Email Tool) ---", flush=True)
+                print(f"msg.is_multipart(): {msg.is_multipart()}", flush=True)
+                # Print email structure headers to verify attachment MIME segments exist
+                print(f"msg structure headers:\n{msg.as_string()[:500]}...", flush=True)
 
                 # Send using SMTP TLS
                 server = smtplib.SMTP(smtp_server, smtp_port)

@@ -40,7 +40,7 @@ class DuckDuckGoAdapter(BaseSearchAdapter):
         try:
             # 1. Try to use official duckduckgo_search library if available
             try:
-                from duckduckgo_search import DDGS
+                from ddgs import DDGS
                 with DDGS() as ddgs:
                     results = []
                     ddgs_results = ddgs.text(request.query, max_results=request.max_results)

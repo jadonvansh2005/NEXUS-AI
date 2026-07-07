@@ -80,6 +80,15 @@ class PlaywrightAdapter(BaseBrowserAdapter):
             html
         )
 
+        # Log to history
+        try:
+            from tools.register_tools import registry
+            history_tool = registry.get_tool("browser.history")
+            if history_tool:
+                history_tool.add_entry(request.url, title or "Webpage")
+        except Exception as e:
+            print(f"[History Logger Error] {e}")
+
         return BrowserResponse(
             success=True,
             page=BrowserPage(
@@ -95,7 +104,7 @@ class PlaywrightAdapter(BaseBrowserAdapter):
     async def screenshot(
         self,
         request: BrowserRequest,
-    ) -> bytes:
+    ) -> str:
 
         page = await self._get_page("screenshot")
 
@@ -105,10 +114,37 @@ class PlaywrightAdapter(BaseBrowserAdapter):
             timeout=request.timeout * 1000,
         )
 
-        return await page.screenshot(
+        # Log to history
+        try:
+            title = await page.title()
+            from tools.register_tools import registry
+            history_tool = registry.get_tool("browser.history")
+            if history_tool:
+                history_tool.add_entry(request.url, title or "Screenshot Capture")
+        except Exception as e:
+            print(f"[History Logger Error] {e}")
+
+        import time
+        from urllib.parse import urlparse
+        
+        parsed_url = urlparse(request.url)
+        domain = parsed_url.netloc.replace(":", "_").replace(".", "_")
+        filename = f"screenshot_{domain}_{int(time.time())}.png"
+        
+        download_dir = Path("downloads")
+        download_dir.mkdir(
+            parents=True,
+            exist_ok=True,
+        )
+        
+        file_path = download_dir / filename
+        await page.screenshot(
+            path=str(file_path),
             full_page=True,
             type="png",
         )
+
+        return str(file_path)
 
     async def download(
         self,

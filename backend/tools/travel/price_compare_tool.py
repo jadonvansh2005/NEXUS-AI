@@ -1,16 +1,13 @@
 """
-UPSS Fare Estimator Tool
+UPSS Price Compare Tool
 
-Estimate future travel fares and recommend the best booking time.
+Compare prices across travel options.
 
 Future integrations:
-
 - Google Flights
 - Skyscanner
-- Amadeus
-- Kiwi
-- Flight Search Tool
-- Price Prediction Engine
+- Booking.com
+- Price Engine API
 """
 
 from __future__ import annotations
@@ -25,58 +22,45 @@ from tools.tool_schema import (
 )
 
 from tools.travel.schemas import (
-    FareEstimatorRequest,
+    PriceCompareRequest,
     TravelResponse,
 )
 
 
-class FareEstimatorTool(BaseTool):
+class PriceCompareTool(BaseTool):
     """
-    Estimate future flight fares.
+    Compare travel options pricing.
     """
 
     metadata = ToolMetadata(
 
-        name="travel.fare_estimator",
+        name="travel.price_compare",
 
-        display_name="Fare Estimator",
+        display_name="Price Compare",
 
-        description="Estimate future travel fares and booking recommendations.",
+        description="Compare prices across travel options.",
 
         category=ToolCategory.TRAVEL,
 
         tags=[
             "travel",
             "flight",
-            "fare",
-            "prediction",
+            "hotel",
+            "compare",
+            "price",
         ],
 
     )
 
     permission = ToolPermission.read_only()
 
-    input_model = FareEstimatorRequest
+    input_model = PriceCompareRequest
 
     async def execute(
         self,
         context: ToolContext,
-        request: FareEstimatorRequest,
+        request: PriceCompareRequest,
     ) -> ToolResult:
-
-        #
-        # Future Pipeline
-        #
-        # FlightSearchTool.execute(...)
-        #
-        # Amadeus(...)
-        #
-        # Skyscanner(...)
-        #
-        # PricePredictionEngine(...)
-        #
-        # LLM.generate_booking_advice(...)
-        #
 
         result = {
 
@@ -86,11 +70,11 @@ class FareEstimatorTool(BaseTool):
 
             "departure_date": request.departure_date,
 
-            "status": "fare_estimation_pending",
+            "status": "price_compare_pending",
 
             "message": (
 
-                "Fare estimation will "
+                "Price comparison will "
 
                 "be performed after "
 
@@ -104,7 +88,7 @@ class FareEstimatorTool(BaseTool):
 
             success=True,
 
-            message="Fare estimation request prepared successfully.",
+            message="Price comparison request prepared successfully.",
 
         )
 
@@ -114,7 +98,7 @@ class FareEstimatorTool(BaseTool):
 
             data={
 
-                "fare_estimation": result,
+                "price_compare": result,
 
                 **response.model_dump(),
 

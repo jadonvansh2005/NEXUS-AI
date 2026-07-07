@@ -102,14 +102,22 @@ class ExecutionDispatcher:
         else:
             request = task_input
 
-        if inspect.iscoroutinefunction(tool.execute):
-            result = await tool.execute(context, request)
-            # If result is a ToolResult, extract the data/result
-            if hasattr(result, "data"):
-                return result.data
-            return result
-        else:
-            return tool.execute(task_input)
+        # Initialize tool if supported
+        if hasattr(tool, "initialize"):
+            await tool.initialize()
+
+        try:
+            if inspect.iscoroutinefunction(tool.execute):
+                result = await tool.execute(context, request)
+                if hasattr(result, "data"):
+                    return result.data
+                return result
+            else:
+                return tool.execute(task_input)
+        finally:
+            # Shutdown tool if supported
+            if hasattr(tool, "shutdown"):
+                await tool.shutdown()
 
     # =====================================================
     # Batch Dispatch

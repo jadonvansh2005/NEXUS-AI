@@ -2,6 +2,7 @@ from typing import Dict
 from typing import List
 from typing import Optional
 from typing import Union
+
 from rag.vector_store.vector_schema import (
     SearchResult
 )
@@ -27,9 +28,6 @@ class ContextBuilder:
     # Build Context
     # --------------------------------------------------
 
-
-
-
     def build(
 
         self,
@@ -40,6 +38,10 @@ class ContextBuilder:
         ]
 
     ) -> str:
+
+        print("\n" + "=" * 80)
+        print("[ContextBuilder] Building Context")
+        print("=" * 80)
 
         # --------------------------------------------------
         # Single Source
@@ -53,7 +55,10 @@ class ContextBuilder:
 
         ):
 
-            return (
+            print(f"[ContextBuilder] Single Source Mode")
+            print(f"[ContextBuilder] Total Results : {len(contexts)}")
+
+            context = (
 
                 self._build_section(
 
@@ -65,9 +70,17 @@ class ContextBuilder:
 
             )
 
+            print("\n[ContextBuilder] Final Context:\n")
+            print(context if context else "<< EMPTY CONTEXT >>")
+            print("=" * 80 + "\n")
+
+            return context
+
         # --------------------------------------------------
         # Multi Source
         # --------------------------------------------------
+
+        print("[ContextBuilder] Multi Source Mode\n")
 
         sections: List[str] = []
 
@@ -76,6 +89,33 @@ class ContextBuilder:
             contexts.items()
 
         ):
+
+            print(f"Source : {source}")
+            print(f"Results: {len(results)}")
+
+            if results:
+
+                for i, result in enumerate(results, start=1):
+
+                    print(f"\n  Result {i}")
+                    print(f"  Score : {result.score}")
+
+                    payload = result.payload or {}
+
+                    text = payload.get(
+
+                        "text",
+
+                        ""
+
+                    )
+
+                    if text:
+
+                        print("  Chunk Preview:")
+                        print(text[:200])
+
+            print("-" * 80)
 
             section = (
 
@@ -97,7 +137,7 @@ class ContextBuilder:
 
                 )
 
-        return (
+        context = (
 
             self.separator.join(
 
@@ -106,6 +146,21 @@ class ContextBuilder:
             )
 
         )
+
+        print("\n========== FINAL CONTEXT ==========\n")
+
+        if context:
+
+            print(context)
+
+        else:
+
+            print("<< EMPTY CONTEXT >>")
+
+        print("\n===================================\n")
+
+        return context
+
     # --------------------------------------------------
     # Build One Section
     # --------------------------------------------------

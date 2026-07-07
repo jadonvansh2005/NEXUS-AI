@@ -39,74 +39,91 @@ class TopModelOptimizer:
 
         results = {}
 
+        print("\n========== HYPERPARAMETER OPTIMIZATION ==========\n")
+
         for name in model_names:
 
             if problem_type == "classification":
 
-                model, params = (
-                    self._classification_config(
-                        name
-                    )
+                model, params = self._classification_config(
+                    name
                 )
 
                 metric = "accuracy"
 
             else:
 
-                model, params = (
-                    self._regression_config(
-                        name
-                    )
+                model, params = self._regression_config(
+                    name
                 )
 
                 metric = "r2"
 
             if model is None:
 
+                print(f"Skipping {name} (No Config Found)")
                 continue
 
-            search = RandomizedSearchCV(
+            try:
 
-                estimator=model,
+                print(f"Optimizing {name} ...")
 
-                param_distributions=params,
+                search = RandomizedSearchCV(
 
-                n_iter=5,
+                    estimator=model,
 
-                cv=3,
+                    param_distributions=params,
 
-                scoring=metric,
+                    n_iter=3,
 
-                random_state=42,
+                    cv=2,
 
-                n_jobs=-1
+                    scoring=metric,
 
-            )
+                    random_state=42,
 
-            search.fit(
-                X_train,
-                y_train
-            )
+                    n_jobs=1,
 
-            results[name] = {
+                    error_score="raise"
 
-                "best_model":
-                    search.best_estimator_,
+                )
 
-                "best_params":
-                    search.best_params_,
+                search.fit(
+                    X_train,
+                    y_train
+                )
 
-                "best_score":
-                    float(
-                        round(
-                            search.best_score_,
-                            4
+                results[name] = {
+
+                    "best_model":
+                        search.best_estimator_,
+
+                    "best_params":
+                        search.best_params_,
+
+                    "best_score":
+                        float(
+                            round(
+                                search.best_score_,
+                                4
+                            )
                         )
-                    )
-            }
+                }
+
+                print(f"{name} Optimization Completed")
+
+            except Exception as e:
+
+                print(f"{name} Optimization Failed")
+
+                print(e)
+
+                continue
+
+        print("\n===============================================\n")
 
         return results
-    
+
     def _classification_config(
         self,
         name
@@ -116,28 +133,59 @@ class TopModelOptimizer:
 
             "RandomForest": (
 
-                RandomForestClassifier(),
+                RandomForestClassifier(
+                    random_state=42
+                ),
 
                 {
+
                     "n_estimators":
                         [100, 200, 300],
 
                     "max_depth":
-                        [5, 10, 20]
+                        [5, 10, 20],
+
+                    "min_samples_split":
+                        [2, 5]
+
                 }
+
             ),
 
             "GradientBoosting": (
 
-                GradientBoostingClassifier(),
+                GradientBoostingClassifier(
+                    random_state=42
+                ),
 
                 {
+
                     "n_estimators":
                         [100, 200],
 
                     "learning_rate":
                         [0.01, 0.05, 0.1]
+
                 }
+
+            ),
+
+            "ExtraTrees": (
+
+                ExtraTreesClassifier(
+                    random_state=42
+                ),
+
+                {
+
+                    "n_estimators":
+                        [100, 200],
+
+                    "max_depth":
+                        [None, 10, 20]
+
+                }
+
             ),
 
             "LightGBM": (
@@ -145,12 +193,15 @@ class TopModelOptimizer:
                 LGBMClassifier(),
 
                 {
+
                     "n_estimators":
                         [100, 200],
 
                     "max_depth":
                         [5, 10, 20]
+
                 }
+
             ),
 
             "XGBoost": (
@@ -158,112 +209,159 @@ class TopModelOptimizer:
                 XGBClassifier(),
 
                 {
+
                     "n_estimators":
                         [100, 200],
 
                     "max_depth":
                         [3, 5, 10]
+
                 }
+
             ),
 
             "CatBoost": (
 
                 CatBoostClassifier(
-                    verbose=0
+                    verbose=False
                 ),
 
                 {
+
                     "depth":
                         [4, 6, 8],
 
                     "iterations":
                         [100, 200]
+
                 }
+
             )
+
         }
 
         return configs.get(
             name,
             (None, None)
         )
-    
+
     def _regression_config(
-            self,
-            name
-        ):
+        self,
+        name
+    ):
 
-            configs = {
+        configs = {
 
-                "RandomForest": (
+            "RandomForest": (
 
-                    RandomForestRegressor(),
-
-                    {
-                        "n_estimators":
-                            [100, 200, 300],
-
-                        "max_depth":
-                            [5, 10, 20]
-                    }
+                RandomForestRegressor(
+                    random_state=42
                 ),
 
-                "GradientBoosting": (
+                {
 
-                    GradientBoostingRegressor(),
+                    "n_estimators":
+                        [100, 200, 300],
 
-                    {
-                        "n_estimators":
-                            [100, 200],
+                    "max_depth":
+                        [5, 10, 20],
 
-                        "learning_rate":
-                            [0.01, 0.05, 0.1]
-                    }
+                    "min_samples_split":
+                        [2, 5]
+
+                }
+
+            ),
+
+            "GradientBoosting": (
+
+                GradientBoostingRegressor(
+                    random_state=42
                 ),
 
-                "LightGBM": (
+                {
 
-                    LGBMRegressor(),
+                    "n_estimators":
+                        [100, 200],
 
-                    {
-                        "n_estimators":
-                            [100, 200],
+                    "learning_rate":
+                        [0.01, 0.05, 0.1]
 
-                        "max_depth":
-                            [5, 10, 20]
-                    }
+                }
+
+            ),
+
+            "ExtraTrees": (
+
+                ExtraTreesRegressor(
+                    random_state=42
                 ),
 
-                "XGBoost": (
+                {
 
-                    XGBRegressor(),
+                    "n_estimators":
+                        [100, 200],
 
-                    {
-                        "n_estimators":
-                            [100, 200],
+                    "max_depth":
+                        [None, 10, 20]
 
-                        "max_depth":
-                            [3, 5, 10]
-                    }
+                }
+
+            ),
+
+            "LightGBM": (
+
+                LGBMRegressor(),
+
+                {
+
+                    "n_estimators":
+                        [100, 200],
+
+                    "max_depth":
+                        [5, 10, 20]
+
+                }
+
+            ),
+
+            "XGBoost": (
+
+                XGBRegressor(),
+
+                {
+
+                    "n_estimators":
+                        [100, 200],
+
+                    "max_depth":
+                        [3, 5, 10]
+
+                }
+
+            ),
+
+            "CatBoost": (
+
+                CatBoostRegressor(
+                    verbose=False
                 ),
 
-                "CatBoost": (
+                {
 
-                    CatBoostRegressor(
-                        verbose=0
-                    ),
+                    "depth":
+                        [4, 6, 8],
 
-                    {
-                        "depth":
-                            [4, 6, 8],
+                    "iterations":
+                        [100, 200]
 
-                        "iterations":
-                            [100, 200]
-                    }
-                )
-            }
+                }
 
-            return configs.get(
-                name,
-                (None, None)
             )
-        
+
+        }
+
+        return configs.get(
+            name,
+            (None, None)
+        )

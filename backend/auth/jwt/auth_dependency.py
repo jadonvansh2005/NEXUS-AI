@@ -112,6 +112,16 @@ def get_current_user(
 
             )
 
+        if not user.is_verified:
+
+            raise HTTPException(
+
+                status_code=status.HTTP_401_UNAUTHORIZED,
+
+                detail="Email not verified"
+
+            )
+
         return user
 
     finally:

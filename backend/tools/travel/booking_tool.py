@@ -63,7 +63,7 @@ class BookingTool(BaseTool):
     # Keep confirmation enabled.
     #
 
-    permission = ToolPermission.requires_confirmation()
+    permission = ToolPermission.transaction()
 
     input_model = BookingRequest
 

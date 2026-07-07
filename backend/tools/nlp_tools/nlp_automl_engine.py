@@ -28,7 +28,8 @@ class NLPAutoMLEngine:
 
     def run(
         self,
-        df
+        df,
+        text_columns: list[str],
     ):
 
         # ==================
@@ -55,34 +56,46 @@ class NLPAutoMLEngine:
 
         import pandas as pd
 
-        text_column = None
+        # text_column = None
 
-        for col in df.columns:
+        # for col in df.columns:
 
-            if col == target:
-                continue
+        #     if col == target:
+        #         continue
 
-            if (
+        #     if (
 
-                pd.api.types.is_object_dtype(
-                    df[col]
-                )
+        #         pd.api.types.is_object_dtype(
+        #             df[col]
+        #         )
 
-                or
+        #         or
 
-                pd.api.types.is_string_dtype(
-                    df[col]
-                )
+        #         pd.api.types.is_string_dtype(
+        #             df[col]
+        #         )
 
-            ):
+        #     ):
 
-                text_column = col
+        #         text_column = col
 
-                print(
-                    f"\nTEXT COLUMN FOUND: {col}"
-                )
+        #         print(
+        #             f"\nTEXT COLUMN FOUND: {col}"
+        #         )
 
-                break
+        #         break
+
+        if not text_columns:
+
+            raise ValueError(
+                "No NLP text columns detected."
+            )
+
+        text_column = text_columns[0]
+
+        print(
+            f"\nTEXT COLUMN FOUND: {text_column}"
+        )
 
         if text_column is None:
 

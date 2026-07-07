@@ -1,130 +1,230 @@
+import numpy as np
 import pandas as pd
 
 from sklearn.preprocessing import (
     LabelEncoder,
-    StandardScaler
+    StandardScaler,
 )
 
 from sklearn.feature_selection import (
     mutual_info_regression,
-    mutual_info_classif
+    mutual_info_classif,
+    VarianceThreshold,
 )
 
 
 class FeatureEngineer:
 
-    def process(
+    # =====================================================
+    # Replace Rare Categories
+    # =====================================================
+
+    def _replace_rare_categories(
+
         self,
-        df,
-        target,
-        problem_type
+
+        df: pd.DataFrame,
+
+        threshold: float = 0.01,
+
     ):
 
         df = df.copy()
 
-        # =====================
-        # Missing Value Handling
-        # =====================
+        categorical = df.select_dtypes(
+
+            include=[
+                "object",
+                "string"
+            ]
+
+        ).columns
+
+        for col in categorical:
+
+            freq = (
+
+                df[col]
+
+                .value_counts(
+
+                    normalize=True
+
+                )
+
+            )
+
+            rare = freq[
+
+                freq < threshold
+
+            ].index
+
+            if len(rare):
+
+                df[col] = (
+
+                    df[col]
+
+                    .replace(
+
+                        rare,
+
+                        "Other"
+
+                    )
+
+                )
+
+        return df
+
+    # =====================================================
+    # Remove Near Zero Variance
+    # =====================================================
+
+    def _remove_low_variance(
+
+        self,
+
+        X,
+
+    ):
+
+        selector = (
+
+            VarianceThreshold(
+
+                threshold=0.0001
+
+            )
+
+        )
+
+        selector.fit(X)
+
+        selected = (
+
+            X.columns[
+
+                selector.get_support()
+
+            ]
+
+        )
+
+        return X[selected]
+
+    # =====================================================
+    # Main Pipeline
+    # =====================================================
+
+    def process(
+
+        self,
+
+        df,
+
+        target,
+
+        problem_type,
+
+    ):
+
+        df = df.copy()
+
+        # ==========================================
+        # Boolean → Integer
+        # ==========================================
+
+        bool_cols = (
+
+            df.select_dtypes(
+
+                include="bool"
+
+            ).columns
+
+        )
+
+        for col in bool_cols:
+
+            df[col] = (
+
+                df[col]
+
+                .astype(int)
+
+            )
+
+        # ==========================================
+        # Rare Category Handling
+        # ==========================================
+
+        df = self._replace_rare_categories(df)
+
+        # ==========================================
+        # Missing Values
+        # ==========================================
 
         for col in df.columns:
 
-            if pd.api.types.is_numeric_dtype(
-                df[col]
+            if (
+
+                pd.api.types.is_numeric_dtype(
+
+                    df[col]
+
+                )
+
             ):
 
                 df[col] = (
+
                     df[col]
+
                     .fillna(
-                        df[col].median()
+
+                        df[col]
+
+                        .median()
+
                     )
+
                 )
 
             else:
 
                 df[col] = (
+
                     df[col]
+
                     .fillna(
+
                         "Unknown"
+
                     )
+
                 )
 
-        # =====================
+        # ==========================================
         # Separate Target
-        # =====================
+        # ==========================================
 
         y = df[target]
 
         X = df.drop(
-            columns=[target]
+
+            columns=[
+
+                target
+
+            ]
+
         )
 
-        # =====================
-        # Detect NLP Dataset
-        # =====================
-
-#         text_cols = []
-
-#         for col in X.columns:
-
-#             if not pd.api.types.is_numeric_dtype(
-#                 X[col]
-#             ):
-
-#                 avg_len = (
-
-#                     X[col]
-#                     .astype(str)
-#                     .str.len()
-#                     .mean()
-
-#                 )
-
-#                 unique_ratio = (
-
-#                     X[col]
-#                     .nunique()
-
-#                     / max(
-#                         len(X),
-#                         1
-#                     )
-
-#                 )
-
-#                 if (
-
-#                     avg_len > 20
-
-#                     or
-
-#                     unique_ratio > 0.5
-
-#                 ):
-
-#                     text_cols.append(
-#                         col
-#                     )
-
-#         if len(text_cols) > 0:
-
-#             raise ValueError(
-
-#                 f"""
-# NLP Dataset Detected.
-
-# Text Columns:
-# {text_cols}
-
-# Current AutoML supports only structured/tabular datasets.
-
-# Route this dataset to NLP Pipeline.
-# """
-
-#             )
-
-        # =====================
-        # Categorical Columns
-        # =====================
+        # ==========================================
+        # Detect Categorical Columns
+        # ==========================================
 
         categorical_cols = [
 
@@ -133,14 +233,16 @@ class FeatureEngineer:
             for col in X.columns
 
             if not pd.api.types.is_numeric_dtype(
+
                 X[col]
+
             )
 
         ]
 
-        # =====================
+        # ==========================================
         # Binary Encoding
-        # =====================
+        # ==========================================
 
         binary_cols = [
 
@@ -152,18 +254,29 @@ class FeatureEngineer:
 
         ]
 
+        binary_encoders = {}
+
         for col in binary_cols:
 
             encoder = LabelEncoder()
 
-            X[col] = encoder.fit_transform(
-                X[col]
-                .astype(str)
+            X[col] = (
+
+                encoder.fit_transform(
+
+                    X[col]
+
+                    .astype(str)
+
+                )
+
             )
 
-        # =====================
+            binary_encoders[col] = encoder
+
+        # ==========================================
         # One Hot Encoding
-        # =====================
+        # ==========================================
 
         multi_class_cols = [
 
@@ -175,9 +288,7 @@ class FeatureEngineer:
 
         ]
 
-        if len(
-            multi_class_cols
-        ) > 0:
+        if multi_class_cols:
 
             X = pd.get_dummies(
 
@@ -187,152 +298,143 @@ class FeatureEngineer:
 
                 drop_first=True,
 
-                dtype=int
+                dtype=int,
 
             )
 
-        # =====================
+        # ==========================================
+        # Remove Near Zero Variance
+        # ==========================================
+
+        X = self._remove_low_variance(X)
+
+        # ==========================================
         # Final Safety Check
-        # =====================
+        # ==========================================
 
         object_cols = (
 
             X.select_dtypes(
 
                 include=[
+
                     "object",
-                    "string"
+
+                    "string",
+
                 ]
 
             )
+
             .columns
+
             .tolist()
 
         )
 
-        if len(
-            object_cols
-        ) > 0:
+        if object_cols:
 
             raise ValueError(
 
                 f"""
-Unsupported Columns Found After Encoding:
+
+Unsupported Columns Found
 
 {object_cols}
 
-All features must be numeric before scaling.
 """
 
             )
 
-        # =====================
-        # Scaling
-        # =====================
+        X = X.astype(float)
 
-        scaler = (
-            StandardScaler()
-        )
+
+
+        # ==========================================
+        # Scaling
+        # ==========================================
+
+        scaler = StandardScaler()
 
         X_scaled = pd.DataFrame(
 
-            scaler.fit_transform(
-                X
-            ),
+            scaler.fit_transform(X),
 
-            columns=X.columns
+            columns=X.columns,
 
         )
 
-        # =====================
+        # ==========================================
         # Target Encoding
-        # =====================
+        # ==========================================
+
+        target_encoder = None
 
         if problem_type == "classification":
 
-            if not pd.api.types.is_numeric_dtype(
-                y
-            ):
+            if not pd.api.types.is_numeric_dtype(y):
 
-                target_encoder = (
-                    LabelEncoder()
-                )
+                target_encoder = LabelEncoder()
 
-                y = (
+                y = target_encoder.fit_transform(
 
-                    target_encoder
-                    .fit_transform(
-                        y.astype(str)
-                    )
+                    y.astype(str)
 
                 )
 
-        # =====================
+        # ==========================================
         # Feature Importance
-        # =====================
+        # ==========================================
 
         try:
 
             if problem_type == "regression":
 
-                scores = (
+                scores = mutual_info_regression(
 
-                    mutual_info_regression(
+                    X_scaled,
 
-                        X_scaled,
+                    y,
 
-                        y,
-
-                        random_state=42
-
-                    )
+                    random_state=42,
 
                 )
 
             else:
 
-                scores = (
+                scores = mutual_info_classif(
 
-                    mutual_info_classif(
+                    X_scaled,
 
-                        X_scaled,
+                    y,
 
-                        y,
-
-                        random_state=42
-
-                    )
+                    random_state=42,
 
                 )
 
         except Exception:
 
-            scores = [
+            scores = np.zeros(
 
-                0.0
+                len(X_scaled.columns)
 
-                for _ in range(
-                    len(
-                        X_scaled.columns
-                    )
-                )
-
-            ]
+            )
 
         feature_scores = {
 
-            col: float(
-                round(
-                    score,
-                    4
-                )
+            feature: float(
+
+                round(score, 5)
+
             )
 
-            for col, score in zip(
+            for feature, score
+
+            in zip(
 
                 X_scaled.columns,
 
-                scores
+                scores,
 
             )
 
@@ -346,34 +448,72 @@ All features must be numeric before scaling.
 
                 key=lambda x: x[1],
 
-                reverse=True
+                reverse=True,
 
             )
 
         )
 
+        # ==========================================
+        # Select Top Features
+        # ==========================================
+
+        top_features = list(
+
+            feature_scores.keys()
+
+        )[:25]
+
+        # ==========================================
+        # Metadata
+        # ==========================================
+
+        encoding_metadata = {
+
+            "binary_encoded": binary_cols,
+
+            "one_hot_encoded": multi_class_cols,
+
+            "feature_columns": list(
+
+                X_scaled.columns
+
+            ),
+
+        }
+
+        # ==========================================
+        # Return
+        # ==========================================
+
         return {
 
-            "X":
-                X_scaled,
+            "X": X_scaled,
 
-            "y":
-                y,
+            "y": y,
 
-            "scaler":
-                scaler,
+            "scaler": scaler,
 
-            "feature_scores":
-                feature_scores,
+            "target_encoder": target_encoder,
 
-            "feature_count":
-                len(
-                    X_scaled.columns
-                ),
+            "binary_encoders": binary_encoders,
 
-            "selected_columns":
-                list(
-                    X_scaled.columns
-                )
+            "feature_scores": feature_scores,
+
+            "top_features": top_features,
+
+            "encoding_metadata": encoding_metadata,
+
+            "feature_count": len(
+
+                X_scaled.columns
+
+            ),
+
+            "selected_columns": list(
+
+                X_scaled.columns
+
+            ),
 
         }

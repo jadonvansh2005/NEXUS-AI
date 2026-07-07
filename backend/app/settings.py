@@ -35,6 +35,7 @@ class Settings(BaseSettings):
     SMTP_PORT: int = 587
     SMTP_SENDER_EMAIL: str = ""
     SMTP_SENDER_PASSWORD: str = ""
+    GOOGLE_CLIENT_ID: str = ""
 
     class Config:
         env_file = ".env"

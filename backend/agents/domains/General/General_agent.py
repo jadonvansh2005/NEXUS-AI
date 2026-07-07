@@ -19,7 +19,8 @@ class GeneralAgent(BaseAgent):
                 "aqi", "air quality", "pollution", "alert", "alerts", "warning", "warnings",
                 "map", "distance", "route", "navigate", "location", "places", "nearby", "geocode",
                 "coordinates", "directions", "direction", "address",
-                "calculate", "calculator", "math", "+", "-", "*", "/", "sum", "add", "multiply", "divide"
+                "calculate", "calculator", "math", "+", "-", "*", "/", "sum", "add", "multiply", "divide",
+                "screenshot", "screen capture", "capture webpage", "capture page", "download", "browser history", "browser search"
             ]
         )
         

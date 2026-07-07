@@ -36,6 +36,9 @@ class MetadataBuilder:
         project: Optional[str] = None
 
     ) -> DocumentMetadata:
+        import hashlib
+        id_str = f"{document.filename}_{user_id or ''}"
+        doc_id = hashlib.md5(id_str.encode("utf-8")).hexdigest()
 
         metadata = MetadataFactory.document(
 
@@ -45,7 +48,8 @@ class MetadataBuilder:
 
             project=project,
 
-            
+            document_id=doc_id,
+
             document_name=document.filename,
 
             document_type=document.document_type,

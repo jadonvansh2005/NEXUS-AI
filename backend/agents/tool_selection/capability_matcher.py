@@ -278,6 +278,18 @@ class CapabilityMatcher:
         # Research & Web
         # =================================================
 
+        if "screenshot" in task_name or "screen" in task_name or "capture" in task_name:
+            capabilities.append("capture_screenshot")
+
+        if "download" in task_name or "save file" in task_name or "fetch file" in task_name:
+            capabilities.append("download_file")
+
+        if "history" in task_name or "visited" in task_name:
+            capabilities.append("browser_history")
+
+        if "browser search" in task_name:
+            capabilities.append("browser_search")
+
         if "webpage" in task_name or "read" in task_name or "article" in task_name:
 
             capabilities.append(

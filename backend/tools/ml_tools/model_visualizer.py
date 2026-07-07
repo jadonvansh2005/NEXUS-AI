@@ -201,6 +201,9 @@ class ModelVisualizer:
 
     ):
 
+        if not model_importance:
+            return ""
+
         output_dir = (
             "uploads/reports/model_charts"
         )

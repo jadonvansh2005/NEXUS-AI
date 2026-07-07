@@ -72,6 +72,47 @@ class FlightSearchRequest(BaseModel):
 
 
 # ==========================================================
+# Fare Estimator
+# ==========================================================
+
+class FareEstimatorRequest(BaseModel):
+
+    origin: str
+
+    destination: str
+
+    departure_date: date
+
+
+# ==========================================================
+# Price Compare
+# ==========================================================
+
+class PriceCompareRequest(BaseModel):
+
+    origin: str
+
+    destination: str
+
+    departure_date: date
+
+    return_date: date | None = None
+
+    passengers: int = Field(
+        default=1,
+        ge=1,
+    )
+
+    providers: list[TravelProvider] = Field(
+        default_factory=lambda: [
+            TravelProvider.GOOGLE,
+            TravelProvider.SKYSCANNER,
+            TravelProvider.GENERIC,
+        ]
+    )
+
+
+# ==========================================================
 # Hotel Search
 # ==========================================================
 
@@ -228,3 +269,77 @@ class TravelResponse(BaseModel):
     success: bool
 
     message: str
+
+
+
+# ==========================================================
+# Flight Cancellation
+# ==========================================================
+
+class FlightCancellationRequest(BaseModel):
+
+    booking_reference: str
+
+    provider: TravelProvider = (
+        TravelProvider.GENERIC
+    )
+
+    reason: str | None = None
+
+
+# ==========================================================
+# Hotel Cancellation
+# ==========================================================
+
+class HotelCancellationRequest(BaseModel):
+
+    booking_reference: str
+
+    provider: TravelProvider = (
+        TravelProvider.BOOKING
+    )
+
+    reason: str | None = None
+
+
+# ==========================================================
+# Train Cancellation
+# ==========================================================
+
+class TrainCancellationRequest(BaseModel):
+
+    booking_reference: str
+
+    provider: TravelProvider = (
+        TravelProvider.IRCTC
+    )
+
+    reason: str | None = None
+
+
+# ==========================================================
+# Price Compare
+# ==========================================================
+
+class PriceCompareRequest(BaseModel):
+
+    origin: str
+
+    destination: str
+
+    departure_date: date
+
+    return_date: date | None = None
+
+    passengers: int = Field(
+        default=1,
+        ge=1,
+    )
+
+    providers: list[TravelProvider] = Field(
+        default_factory=lambda: [
+            TravelProvider.GOOGLE,
+            TravelProvider.SKYSCANNER,
+            TravelProvider.GENERIC,
+        ]
+    )

@@ -8,9 +8,16 @@ from app.settings import settings
 class GeminiClient(BaseLLM):
 
     def __init__(self):
+        import os
+        # Avoid conflicting GCP environment variables that confuse the SDK into requesting OAuth
+        os.environ.pop("GOOGLE_APPLICATION_CREDENTIALS", None)
+        os.environ.pop("GOOGLE_API_KEY", None)
+
+        key = settings.GEMINI_API_KEY or ""
+        print(f"[GeminiClient] Initializing client. API key length: {len(key)}")
 
         genai.configure(
-            api_key=settings.GEMINI_API_KEY
+            api_key=key
         )
 
         self.model = genai.GenerativeModel(

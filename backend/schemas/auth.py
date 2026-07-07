@@ -36,3 +36,23 @@ class TokenResponse(
     access_token: str
 
     token_type: str
+
+
+class VerifyEmailRequest(
+
+    BaseModel
+
+):
+
+    email: EmailStr
+
+    otp: str
+
+
+class GoogleLoginRequest(
+
+    BaseModel
+
+):
+
+    token: str

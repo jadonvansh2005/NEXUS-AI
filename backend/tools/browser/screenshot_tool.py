@@ -65,13 +65,13 @@ class ScreenshotTool(BaseTool):
         request: BrowserRequest,
     ) -> ToolResult:
 
-        image = await self.adapter.screenshot(
+        file_path = await self.adapter.screenshot(
             request
         )
 
         return ToolResult.ok(
             message="Screenshot captured successfully.",
             data={
-                "image": image,
+                "path": file_path,
             },
         )

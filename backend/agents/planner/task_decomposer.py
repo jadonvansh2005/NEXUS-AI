@@ -64,51 +64,59 @@ class TaskDecomposer:
             ]
 
         elif domain == "travel":
+            q_lower = query.lower()
+            if "flight" in q_lower or "air" in q_lower:
+                return [
+                    PlannerTask(
+                        id="task_1",
+                        name="Search Flights",
+                        description="Search for flights between origin and destination.",
+                        tool="travel.flights"
+                    )
+                ]
+            elif "hotel" in q_lower or "stay" in q_lower or "room" in q_lower:
+                return [
+                    PlannerTask(
+                        id="task_1",
+                        name="Search Hotels",
+                        description="Search for hotels at the destination.",
+                        tool="travel.hotels"
+                    )
+                ]
+            elif "train" in q_lower or "rail" in q_lower:
+                return [
+                    PlannerTask(
+                        id="task_1",
+                        name="Search Trains",
+                        description="Search for trains between origin and destination.",
+                        tool="travel.trains"
+                    )
+                ]
+            else:
+                return [
 
-            return [
+                    PlannerTask(
+                        id="task_1",
+                        name="Get Destination",
+                        description="Understand destination."
+                    ),
 
-                PlannerTask(
-                    id="task_1",
-                    name="Get Destination",
-                    description="Understand destination."
-                ),
+                    PlannerTask(
+                        id="task_2",
+                        name="Collect Travel Requirements",
+                        description="Collect travel preferences.",
+                        depends_on=["task_1"]
+                    ),
 
-                PlannerTask(
-                    id="task_2",
-                    name="Collect Travel Requirements",
-                    description="Collect travel preferences.",
-                    depends_on=["task_1"]
-                ),
+                    PlannerTask(
+                        id="task_3",
+                        name="Search Travel Options",
+                        description="Search flights, hotels and transport.",
+                        tool="travel.itinerary",
+                        depends_on=["task_2"]
+                    )
 
-                PlannerTask(
-                    id="task_3",
-                    name="Search Travel Options",
-                    description="Search flights, hotels and transport.",
-                    depends_on=["task_2"]
-                ),
-
-                PlannerTask(
-                    id="task_4",
-                    name="Compare Travel Options",
-                    description="Compare available options.",
-                    depends_on=["task_3"]
-                ),
-
-                PlannerTask(
-                    id="task_5",
-                    name="Estimate Budget",
-                    description="Estimate complete trip budget.",
-                    depends_on=["task_4"]
-                ),
-
-                PlannerTask(
-                    id="task_6",
-                    name="Generate Itinerary",
-                    description="Prepare travel itinerary.",
-                    depends_on=["task_5"]
-                )
-
-            ]
+                ]
 
         elif domain == "career":
 
@@ -147,6 +155,16 @@ class TaskDecomposer:
             import re
             q_lower = re.sub(r'\[workspace:\s*.+?\]', '', query).lower()
             
+            # 1. Search Repositories (Check this before generic Git pushes to prevent overriding search queries)
+            if "search" in q_lower or "find" in q_lower:
+                return [
+                    PlannerTask(
+                        id="task_1",
+                        name="Search Repositories",
+                        description="Search repositories on GitHub."
+                    )
+                ]
+                
             # Git & GitHub workflows
             if any(w in q_lower for w in ["push", "upload", "publish", "github", "git"]):
                 if "clone" in q_lower:
@@ -277,14 +295,6 @@ class TaskDecomposer:
                     )
                 ]
 
-            if "search" in q_lower or "find" in q_lower:
-                return [
-                    PlannerTask(
-                        id="task_1",
-                        name="Search Repositories",
-                        description="Search repositories on GitHub."
-                    )
-                ]
 
             # Default: generate code
             return [
@@ -419,14 +429,8 @@ class TaskDecomposer:
                 return [
                     PlannerTask(
                         id="task_1",
-                        name="Analyze Email Request",
-                        description="Extract email parameters."
-                    ),
-                    PlannerTask(
-                        id="task_2",
                         name="Send Email",
-                        description="Deliver the email to the recipient.",
-                        depends_on=["task_1"]
+                        description="Deliver the email to the recipient."
                     )
                 ]
 
@@ -549,6 +553,48 @@ class TaskDecomposer:
         # General domain dynamic sub-task plans
         if domain == "general":
             q_lower = query.lower()
+            
+            # 1. Browser Screenshot
+            if any(w in q_lower for w in ["screenshot", "screen capture", "capture webpage", "capture page"]):
+                return [
+                    PlannerTask(
+                        id="task_1",
+                        name="Capture Screenshot",
+                        description="Capture webpage screenshot."
+                    )
+                ]
+
+            # 2. Browser Download
+            if any(w in q_lower for w in ["download", "fetch file"]):
+                if "email" not in q_lower and "attachment" not in q_lower:
+                    return [
+                        PlannerTask(
+                            id="task_1",
+                            name="Download File",
+                            description="Download file from URL."
+                        )
+                    ]
+
+            # 3. Browser History
+            if "history" in q_lower or "visited" in q_lower:
+                return [
+                    PlannerTask(
+                        id="task_1",
+                        name="Retrieve Browser History",
+                        description="Fetch browser navigation log."
+                    )
+                ]
+
+            # 4. Browser Search
+            if "browser search" in q_lower or "web search" in q_lower:
+                return [
+                    PlannerTask(
+                        id="task_1",
+                        name="Browser Search",
+                        description="Search webpage content."
+                    )
+                ]
+                
             if any(w in q_lower for w in ["weather", "forecast", "temp", "temperature", "climate", "aqi", "air quality", "pollution", "alert", "warning"]):
                 if "air quality" in q_lower or "aqi" in q_lower or "pollution" in q_lower:
                     task_name = "Fetch Air Quality"

@@ -44,6 +44,11 @@ from agents.workflow.workflow_models import (
     WorkflowType,
 )
 
+from agents.workflow.workflow_models import (
+    WorkflowStatus,
+    WorkflowTaskStatus,
+)
+
 
 class WorkflowAgent(BaseAgent):
 
@@ -72,6 +77,8 @@ class WorkflowAgent(BaseAgent):
         self.logger = (
             WorkflowLogger()
         )
+
+        
 
     # =====================================================
     # Execute
@@ -115,6 +122,10 @@ class WorkflowAgent(BaseAgent):
         )
 
         workflow_state.metadata["user_query"] = getattr(state, "user_query", "")
+        workflow_state.metadata["file_path"] = getattr(state, "file_path", "")
+        workflow_state.metadata["user_id"] = getattr(state, "user_id", "")
+        workflow_state.metadata["approved_by_user"] = state.metadata.get("approved_by_user", False)
+        workflow_state.file_path = getattr(state, "file_path", "")
 
         #
         # ----------------------------------------------
@@ -187,6 +198,10 @@ class WorkflowAgent(BaseAgent):
                 )
 
             )
+
+            if workflow_state.workflow_status == WorkflowStatus.PAUSED:
+                self.log("Workflow Paused - Waiting for User Approval")
+                break
 
             if workflow_state.failed_tasks > 0:
                 self.log("Workflow aborted due to task failure.")

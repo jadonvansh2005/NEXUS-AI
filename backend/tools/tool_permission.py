@@ -74,6 +74,13 @@ class ToolPermission:
         )
 
     @classmethod
+    def requires_confirmation(cls) -> "ToolPermission":
+        return cls(
+            level=PermissionLevel.WRITE,
+            requires_approval=True
+        )
+
+    @classmethod
     def write(cls) -> "ToolPermission":
         return cls(
             level=PermissionLevel.WRITE,

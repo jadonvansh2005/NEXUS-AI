@@ -2,6 +2,10 @@ from tools.ds_tools.dataset_analyzer import (
     DatasetAnalyzer
 )
 
+from tools.ds_tools.dataset_insight_generator import (
+    DatasetInsightGenerator
+)
+
 from tools.ds_tools.visualization_generator import (
     VisualizationGenerator
 )
@@ -33,6 +37,13 @@ class DataScienceService:
                 file_path
             )
         )
+
+        insights = ""
+        try:
+            insights_generator = DatasetInsightGenerator()
+            insights = insights_generator.generate(dataset_report)
+        except Exception as e:
+            print(f"[Insights Error] {e}")
 
         visualizer = (
             VisualizationGenerator()
@@ -138,5 +149,8 @@ class DataScienceService:
                 automl_result,
 
             "pdf_report":
-                pdf_path
+                pdf_path,
+
+            "insights":
+                insights
         }

@@ -123,6 +123,13 @@ class RepositorySearchTool(BaseTool):
                 }
             ][:limit]
 
+        # Print search results directly to terminal console for independent verification
+        print(f"\n==================================================")
+        print(f"[GitHub Search Console Logs] Query: '{query}'")
+        for i, repo in enumerate(repositories, 1):
+            print(f" {i}. {repo['owner']}/{repo['name']} (Stars: {repo['stars']}) -> {repo['url']}")
+        print(f"==================================================\n")
+
         response = GitHubResponse(
             success=True,
             message="Repository search completed successfully.",

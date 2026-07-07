@@ -1,3 +1,16 @@
+import sys
+import os
+
+# Clean GCP environment credentials immediately on startup to prevent conflict with local API Key authentication
+os.environ.pop("GOOGLE_APPLICATION_CREDENTIALS", None)
+os.environ.pop("GOOGLE_API_KEY", None)
+os.environ.pop("GOOGLE_OAUTH_TOKEN", None)
+
+import asyncio
+
+if sys.platform == 'win32':
+    asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+
 from fastapi import (
     FastAPI,
     UploadFile,
@@ -40,6 +53,12 @@ from api.routes.conversations import (
 from api.routes.auth import (
     router as auth_router
 )
+
+import pandas as pd
+
+from tools.ds_tools.target_detector import TargetDetector
+from tools.ds_tools.dataset_type_detector import DatasetTypeDetector
+from tools.nlp_tools.nlp_automl_engine import NLPAutoMLEngine
 
 from tools.report_tools.pdf_report_generator import (
     PDFReportGenerator
@@ -176,6 +195,37 @@ async def run_datascience_pipeline(
             )
         )
 
+        df = pd.read_csv(file_path)
+
+        target_detector = TargetDetector()
+
+        target_info = target_detector.detect(df)
+
+        dataset_detector = DatasetTypeDetector()
+
+        dataset_info = dataset_detector.detect(
+            df,
+            target_info["target"],
+        )
+
+        if dataset_info["dataset_type"] == "structured":
+
+            automl = AutoMLEngine()
+
+            automl_result = automl.run(file_path)
+
+        else:
+
+            automl = NLPAutoMLEngine()
+
+            automl_result = automl.run(
+
+                df,
+
+                dataset_info["text_columns"]
+
+            )
+
         # ====================
         # AutoML
         # ====================
@@ -198,29 +248,21 @@ async def run_datascience_pipeline(
             ModelVisualizer()
         )
 
-        model_charts = (
+        model_charts = {}
 
-            model_visualizer.generate_all(
-
-                automl_result[
-                    "results"
-                ],
-
-                automl_result[
-                    "feature_scores"
-                ],
-
-                automl_result[
-                    "model_importance"
-                ],
-
-                automl_result[
-                    "problem_type"
-                ]
-
+        if (
+            "results" in automl_result
+            and
+            "feature_scores" in automl_result
+        ):
+            model_charts = (
+                model_visualizer.generate_all(
+                    automl_result.get("results", {}),
+                    automl_result.get("feature_scores", {}),
+                    automl_result.get("model_importance", {}),
+                    automl_result.get("problem_type", "classification")
+                )
             )
-
-        )
 
         # ====================
         # PDF Report
@@ -258,44 +300,28 @@ async def run_datascience_pipeline(
                 dataset_report,
 
             "problem_type":
-                automl_result[
-                    "problem_type"
-                ],
+                automl_result.get("problem_type"),
 
             "target":
-                automl_result[
-                    "target"
-                ],
+                automl_result.get("target"),
 
             "best_model":
-                automl_result[
-                    "best_model"
-                ],
+                automl_result.get("best_model"),
 
             "leaderboard":
-                automl_result[
-                    "leaderboard"
-                ],
+                automl_result.get("leaderboard"),
 
             "feature_scores":
-                automl_result[
-                    "feature_scores"
-                ],
+                automl_result.get("feature_scores", {}),
 
             "model_importance":
-                automl_result[
-                    "model_importance"
-                ],
+                automl_result.get("model_importance", {}),
 
             "saved_model":
-                automl_result[
-                    "saved_model_path"
-                ],
+                automl_result.get("saved_model_path"),
 
             "metadata":
-                automl_result[
-                    "metadata_path"
-                ],
+                automl_result.get("metadata_path"),
 
             "pdf_report":
                 pdf_path

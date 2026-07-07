@@ -190,6 +190,61 @@ class WorkflowExecutor:
                     if not task_input.get("radius"):
                         task_input["radius"] = 1000
 
+                if tool_name in ["travel.trains", "travel.flights"]:
+                    import re
+                    from datetime import datetime, timedelta
+                    user_q = state.metadata.get("user_query", "")
+                    
+                    if not task_input.get("origin"):
+                        orig_match = re.search(r'(?:from|between)\s+([a-zA-Z\s]+?)\s+(?:to|and)', user_q, re.IGNORECASE)
+                        task_input["origin"] = orig_match.group(1).strip() if orig_match else "Delhi"
+                        
+                    if not task_input.get("destination"):
+                        dest_match = re.search(r'(?:to|and|for)\s+([a-zA-Z\s]+)', user_q, re.IGNORECASE)
+                        task_input["destination"] = dest_match.group(1).strip() if dest_match else "Gwalior"
+                        
+                    if tool_name == "travel.trains" and not task_input.get("journey_date"):
+                        task_input["journey_date"] = datetime.now().date() + timedelta(days=1)
+                    elif tool_name == "travel.flights":
+                        if not task_input.get("departure_date"):
+                            task_input["departure_date"] = datetime.now().date() + timedelta(days=1)
+                        if not task_input.get("return_date"):
+                            task_input["return_date"] = None
+                        if not task_input.get("passengers"):
+                            task_input["passengers"] = 1
+
+                elif tool_name == "travel.hotels":
+                    import re
+                    from datetime import datetime, timedelta
+                    user_q = state.metadata.get("user_query", "")
+                    
+                    if not task_input.get("destination"):
+                        dest_match = re.search(r'(?:in|at|for|to)\s+([a-zA-Z\s]+)', user_q, re.IGNORECASE)
+                        task_input["destination"] = dest_match.group(1).strip() if dest_match else "Gwalior"
+                        
+                    if not task_input.get("check_in"):
+                        task_input["check_in"] = datetime.now().date() + timedelta(days=1)
+                    if not task_input.get("check_out"):
+                        task_input["check_out"] = datetime.now().date() + timedelta(days=2)
+                    if not task_input.get("guests"):
+                        task_input["guests"] = 1
+
+                elif tool_name == "travel.itinerary":
+                    import re
+                    from datetime import datetime, timedelta
+                    user_q = state.metadata.get("user_query", "")
+                    
+                    if not task_input.get("destination"):
+                        dest_match = re.search(r'(?:in|at|for|to)\s+([a-zA-Z\s]+)', user_q, re.IGNORECASE)
+                        task_input["destination"] = dest_match.group(1).strip() if dest_match else "Gwalior"
+                        
+                    if not task_input.get("start_date"):
+                        task_input["start_date"] = datetime.now().date() + timedelta(days=1)
+                    if not task_input.get("end_date"):
+                        task_input["end_date"] = datetime.now().date() + timedelta(days=3)
+                    if not task_input.get("travelers"):
+                        task_input["travelers"] = 1
+
                 if tool_name in ["email.send", "email.draft"]:
                     import re
                     user_q = state.metadata.get("user_query", "")
@@ -203,8 +258,45 @@ class WorkflowExecutor:
                         task_input["subject"] = sub_match.group(1).strip() if sub_match else "UPSS Notification"
                         
                     if not task_input.get("body"):
-                        body_match = re.search(r'body\s+(?:is|of|about)?\s*["\']?([^"\']+)["\']?', user_q, re.IGNORECASE)
-                        task_input["body"] = body_match.group(1).strip() if body_match else "Hello, this is a message from the UPSS assistant."
+                        # Respect explicit empty body instructions
+                        if any(w in user_q.lower() for w in ["empty body", "leave it empty", "do not write any text", "no body", "body empty"]):
+                            task_input["body"] = ""
+                        else:
+                            body_match = re.search(r'body\s+(?:is|of|about)?\s*["\']?([^"\']+)["\']?', user_q, re.IGNORECASE)
+                            task_input["body"] = body_match.group(1).strip() if body_match else "Hello, this is a message from the UPSS assistant."
+
+                    if not task_input.get("attachments"):
+                        attachments = []
+                        # Prioritize the actual uploaded file path if available
+                        uploaded_file = state.file_path
+                        
+                        print(f"\n--- DEBUG Check 1 (Workflow Executor) ---", flush=True)
+                        print(f"state.file_path: {uploaded_file}", flush=True)
+                        
+                        if uploaded_file:
+                            attachments.append(uploaded_file)
+                        else:
+                            # Robust regex to parse filenames with spaces and quotes
+                            file_match = re.search(
+                                r'(?:attach|file)(?:\s+(?:the|a)?\s*file(?:\s+named)?)?\s+["\']([^"\']+)["\']', 
+                                user_q, 
+                                re.IGNORECASE
+                            )
+                            if not file_match:
+                                # Match up to the end of sentence or punctuation
+                                file_match = re.search(
+                                    r'(?:attach|file)(?:\s+(?:the|a)?\s*file(?:\s+named)?)?\s+([^,\.\?]+)', 
+                                    user_q, 
+                                    re.IGNORECASE
+                                )
+                            if file_match:
+                                parsed_file = file_match.group(1).strip()
+                                print(f"Parsed file from query text: {parsed_file}", flush=True)
+                                attachments.append(parsed_file)
+                                
+                        if attachments:
+                            print(f"Final resolved task_input attachments parameter: {attachments}", flush=True)
+                            task_input["attachments"] = attachments
 
                 if tool_name in ["email.read", "email.attachment"]:
                     import re
@@ -341,6 +433,81 @@ class WorkflowExecutor:
                     elif tool_name == "github.issue":
                         if not task_input.get("labels"):
                             task_input["labels"] = ["bug"]
+
+
+                elif tool_name == "browser.search":
+                    if not task_input.get("query"):
+                        q_match = re.search(r'search\s+(?:for|about)?\s*["\']?([^"\']+)["\']?', user_q, re.IGNORECASE)
+                        task_input["query"] = q_match.group(1).strip() if q_match else "fast-api chatbot"
+                    if not task_input.get("limit"):
+                        task_input["limit"] = 10
+
+                elif tool_name in ["browser.screenshot", "browser.download"]:
+                    if not task_input.get("url"):
+                        url_match = re.search(r'https?://[^\s\)]+', user_q, re.IGNORECASE)
+                        task_input["url"] = url_match.group(0).strip() if url_match else "https://google.com"
+                    if not task_input.get("timeout"):
+                        task_input["timeout"] = 30
+                    if not task_input.get("wait_until"):
+                        task_input["wait_until"] = "networkidle"
+
+                elif tool_name == "browser.history":
+                    pass
+
+                # ==========================================================
+                # Human in the Loop (HITL) Check
+                # ==========================================================
+                from agents.human_in_the_loop.approval_manager import ApprovalManager
+                from agents.human_in_the_loop.approval_models import ApprovalAction, RiskLevel
+                
+                # Map tool name to approval action
+                action_map = {
+                    "email.send": ApprovalAction.SEND,
+                    "github.push": ApprovalAction.UPDATE,
+                    "coding.code_generator": ApprovalAction.EXECUTE,
+                    "travel.booking": ApprovalAction.BOOK,
+                    "travel.flight_cancellation": ApprovalAction.CANCEL,
+                    "travel.hotel_cancellation": ApprovalAction.CANCEL,
+                    "travel.train_cancellation": ApprovalAction.CANCEL
+                }
+                action = action_map.get(tool_name, ApprovalAction.EXECUTE)
+                
+                approval_manager = ApprovalManager()
+                risk_level = approval_manager.rules.estimate_risk(action)
+                requires = approval_manager.rules.requires_approval(action, risk_level)
+                
+                # Check if the user already approved it in this turn
+                already_approved = state.metadata.get("approved_by_user", False)
+                
+                if requires and not already_approved:
+                    print(f"⚠️ [HITL] Task '{task.name}' ({tool_name}) requires user approval. Pausing execution.", flush=True)
+                    # Mark task as waiting
+                    state.update_status(task.id, WorkflowTaskStatus.WAITING)
+                    
+                    # Store pending approval info in metadata
+                    state.metadata["pending_approval"] = {
+                        "task_id": task.id,
+                        "tool_name": tool_name,
+                        "action": action.value,
+                        "risk_level": risk_level.value,
+                        "parameters": {
+                            "to": task_input.get("to", ""),
+                            "subject": task_input.get("subject", ""),
+                            "body": task_input.get("body", ""),
+                            "destination": task_input.get("destination", ""),
+                            "origin": task_input.get("origin", ""),
+                            "journey_date": str(task_input.get("journey_date", "")),
+                            "departure_date": str(task_input.get("departure_date", "")),
+                            "check_in": str(task_input.get("check_in", "")),
+                            "check_out": str(task_input.get("check_out", "")),
+                            "booking_type": task_input.get("booking_type", ""),
+                            "raw_query": user_q
+                        }
+                    }
+                    
+                    # Pause workflow execution and exit
+                    state.workflow_status = WorkflowStatus.PAUSED
+                    return state
 
                 # Execute the selected tool using ExecutionController
                 task_input["raw_query"] = user_q
