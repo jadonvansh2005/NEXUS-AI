@@ -72,12 +72,9 @@ app.add_middleware(
 
     CORSMiddleware,
 
-    allow_origins=[
-        "http://localhost:3000"
-        # "http://127.0.0.1:3000"
-    ],
+    allow_origins=["*"],
 
-    allow_credentials=True,
+    allow_credentials=False,
 
     allow_methods=["*"],
 
@@ -230,15 +227,15 @@ async def run_datascience_pipeline(
         # AutoML
         # ====================
 
-        automl = (
-            AutoMLEngine()
-        )
+        # automl = (
+        #     AutoMLEngine()
+        # )
 
-        automl_result = (
-            automl.run(
-                file_path
-            )
-        )
+        # automl_result = (
+        #     automl.run(
+        #         file_path
+        #     )
+        # )
 
         # ====================
         # Model Charts
