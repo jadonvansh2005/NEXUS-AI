@@ -17,13 +17,12 @@ class Settings(BaseSettings):
 
     DATABASE_URL: str
 
-    REDIS_HOST: str
+    REDIS_HOST: str = "localhost"
+    REDIS_PORT: int = 6379
 
-    REDIS_PORT: int
+    QDRANT_URL: str
 
-    QDRANT_HOST: str
-
-    QDRANT_PORT: int
+    QDRANT_API_KEY: str
 
     POSTGRES_BIN: str = r"C:\Program Files\PostgreSQL\18\bin"
 
