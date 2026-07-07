@@ -144,23 +144,17 @@ backend/.env.*
 .cache/
 
 # ============================================================================
-# Uploads / Generated Data
-# ============================================================================
-
-uploads/
-downloads/
-datasets/
-reports/
-artifacts/
-
-# ============================================================================
 # AI / ML
 # ============================================================================
 
 saved_models/
-models/
 checkpoints/
 weights/
+
+# Ignore only ML model folders, not backend/models
+/backend/models/embeddings/
+/backend/models/huggingface/
+/backend/models/sentence_transformers/
 
 *.pkl
 *.joblib
@@ -170,18 +164,9 @@ weights/
 *.onnx
 *.safetensors
 
-# HuggingFace Cache
-.huggingface/
-.cache/huggingface/
-.cache/torch/
-
-# TensorBoard
-runs/
-events.out.tfevents.*
-
-# MLflow
-mlruns/
-
+backend/uploads/
+datasets/
+frontend/public/downloads/
 # ============================================================================
 # Databases
 # ============================================================================
