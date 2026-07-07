@@ -30,6 +30,8 @@ interface UserProfile {
   plan: string;
 }
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+
 function ChatPage() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -113,7 +115,7 @@ function ChatPage() {
 
   const fetchUserProfile = async (token: string) => {
     try {
-      const res = await fetch("http://127.0.0.1:8000/me", {
+      const res = await fetch(`${API_BASE_URL}/me`, {
         headers: { "Authorization": `Bearer ${token}` }
       });
       if (res.ok) {
@@ -133,7 +135,7 @@ function ChatPage() {
 
   const fetchConversations = async (token: string) => {
     try {
-      const res = await fetch("http://127.0.0.1:8000/conversations/", {
+      const res = await fetch(`${API_BASE_URL}/conversations/`, {
         headers: { "Authorization": `Bearer ${token}` }
       });
       if (res.ok) {
@@ -159,7 +161,7 @@ function ChatPage() {
 
   const fetchConversationMessages = async (token: string, convId: string) => {
     try {
-      const res = await fetch(`http://127.0.0.1:8000/conversations/${convId}`, {
+      const res = await fetch(`${API_BASE_URL}/conversations/${convId}`, {
         headers: { "Authorization": `Bearer ${token}` }
       });
       if (res.ok) {
@@ -200,7 +202,7 @@ function ChatPage() {
 
       try {
         console.log(`[RAG Upload] Indexing file '${file.name}' directly via backend...`);
-        const res = await fetch("http://127.0.0.1:8000/rag/upload", {
+        const res = await fetch(`${API_BASE_URL}/rag/upload`, {
           method: "POST",
           headers: {
             "Authorization": `Bearer ${token}`
@@ -317,7 +319,7 @@ function ChatPage() {
         console.log(`[FormData Payload] ${key}:`, value);
       }
 
-      const res = await fetch("http://127.0.0.1:8000/chat", {
+      const res = await fetch(`${API_BASE_URL}/chat`, {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${token}`
@@ -453,7 +455,7 @@ function ChatPage() {
 
     // Delete from backend database
     try {
-      const res = await fetch(`http://127.0.0.1:8000/conversations/${convId}`, {
+      const res = await fetch(`${API_BASE_URL}/conversations/${convId}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer ${token}`

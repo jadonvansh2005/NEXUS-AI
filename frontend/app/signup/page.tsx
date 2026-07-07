@@ -20,6 +20,7 @@ const GoogleIcon = () => (
 );
 
 export default function SignupPage() {
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
   const [showOtpScreen, setShowOtpScreen] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -62,7 +63,7 @@ export default function SignupPage() {
     setLoading(true);
 
     try {
-      const res = await fetch("http://127.0.0.1:8000/auth/signup", {
+      const res = await fetch(`${API_URL}/auth/signup`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, password })
@@ -99,7 +100,7 @@ export default function SignupPage() {
     setLoading(true);
 
     try {
-      const res = await fetch("http://127.0.0.1:8000/auth/verify", {
+      const res = await fetch(`${API_URL}/auth/verify`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, otp })
