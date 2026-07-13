@@ -19,14 +19,18 @@ class FactExtractor:
         # Name
         # -------------------------
 
-        nickname_terminator = r"(?:[\s,.-]+(?:call sign|call me|my nickname is|friends call me|people call me|nickname))"
+        # Conjunctions, pronouns, and verbs that signify the start of a new detail
+        stop_words = r"\b(?:and|but|or|i|my|me|he|she|we|they|you|am|is|are|work|working|currently|live|from|employed|who)\b"
+
+        # Terminate matching if we hit nickname expressions or these stop words
+        name_terminator = rf"(?:[\s,.-]*(?:call sign|call me|my nickname is|friends call me|people call me|nickname|{stop_words}))"
 
         name_patterns = [
 
-            rf"my name is[\s,.-]*(.*?)(?:{nickname_terminator}|$)",
-            rf"this is[\s,.-]*(.*?)(?:{nickname_terminator}|$)",
-            rf"my\s*self[\s,.-]*(.*?)(?:{nickname_terminator}|$)",
-            rf"name is[\s,.-]*(.*?)(?:{nickname_terminator}|$)"
+            rf"my name is[\s,.-]*(.*?)(?:{name_terminator}|$)",
+            rf"this is[\s,.-]*(.*?)(?:{name_terminator}|$)",
+            rf"my\s*self[\s,.-]*(.*?)(?:{name_terminator}|$)",
+            rf"name is[\s,.-]*(.*?)(?:{name_terminator}|$)"
 
         ]
 

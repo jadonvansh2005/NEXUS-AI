@@ -42,6 +42,7 @@ from rag.vector_store.vector_models import (
     CollectionConfig
 
 )
+from qdrant_client.http.models import PayloadSchemaType
 
 import uuid
 
@@ -166,6 +167,25 @@ class VectorService:
 
             )
 
+        )
+
+
+        self.client.create_payload_index(
+            collection_name=config.name,
+            field_name="user_id",
+            field_schema=PayloadSchemaType.INTEGER
+        )
+
+        self.client.create_payload_index(
+            collection_name=config.name,
+            field_name="document_id",
+            field_schema=PayloadSchemaType.KEYWORD
+        )
+
+        self.client.create_payload_index(
+            collection_name=config.name,
+            field_name="source",
+            field_schema=PayloadSchemaType.KEYWORD
         )
 
         return True
