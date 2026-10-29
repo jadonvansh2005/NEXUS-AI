@@ -50,6 +50,9 @@ from agents.orchestrator.orchestrator_agent import (
     OrchestratorAgent
 )
 
+from mcp_integration.tool_router import ToolRouter
+from mcp_integration.filesystem_handler import FilesystemMCPHandler
+
 router = APIRouter()
 
 agent = OrchestratorAgent()
@@ -295,6 +298,18 @@ async def chat(
             content=message
 
         )
+        
+        mcp_route = ToolRouter().route(message)
+
+        has_tool_keywords = (
+            mcp_route == "filesystem_mcp"
+            or any(
+                w in q_lower
+                for w in [
+                    # KEEP YOUR EXISTING KEYWORDS HERE UNCHANGED
+                ]
+            )
+        )
 
         # Check if the query is a tool execution request to bypass profile fact hijacking
         q_lower = message.lower()
@@ -386,6 +401,59 @@ async def chat(
             context_parts.append(conversation_context)
 
         state.memory_context = "\n\n".join(context_parts)
+        
+        if mcp_route == "filesystem_mcp" and not file:
+            try:
+                mcp_client = getattr(request.app.state, "mcp_client", None)
+
+                if mcp_client is None:
+                    raise RuntimeError("MCP client is not initialized.")
+
+                handler = FilesystemMCPHandler(mcp_client)
+                mcp_result = await handler.handle_query(message)
+
+                response_text = mcp_result.get(
+                    "message",
+                    "The filesystem request could not be completed."
+                )
+
+                memory_service.save_message(
+                    db=db,
+                    conversation_id=conversation.id,
+                    role="assistant",
+                    content=response_text,
+                )
+
+                return {
+                    "conversation_id": conversation.id,
+                    "domain": "filesystem",
+                    "execution_plan": [
+                        mcp_result.get("tool", "filesystem_mcp")
+                    ],
+                    "response": response_text,
+                }
+
+            except Exception:
+                logger.exception("Filesystem MCP request failed")
+
+                response_text = (
+                    "The filesystem MCP request failed. "
+                    "Please check that the MCP servers are running correctly."
+                )
+
+                memory_service.save_message(
+                    db=db,
+                    conversation_id=conversation.id,
+                    role="assistant",
+                    content=response_text,
+                )
+
+                return {
+                    "conversation_id": conversation.id,
+                    "domain": "filesystem",
+                    "execution_plan": ["filesystem_mcp"],
+                    "response": response_text,
+                }
 
         try:
             # 1. With LLM: run agent execution directly

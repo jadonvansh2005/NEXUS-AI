@@ -1,5 +1,7 @@
 import sys
 import os
+from contextlib import asynccontextmanager
+from integration.mcp_client import CombinedMCPClient
 
 # Clean GCP environment credentials immediately on startup to prevent conflict with local API Key authentication
 os.environ.pop("GOOGLE_APPLICATION_CREDENTIALS", None)
@@ -64,8 +66,15 @@ from tools.report_tools.pdf_report_generator import (
     PDFReportGenerator
 )
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    async with CombinedMCPClient() as mcp_client:
+        app.state.mcp_client = mcp_client
+        yield
+
 app = FastAPI(
-    title="UPSS AutoML API"
+    title="UPSS AutoML API",
+    lifespan=lifespan,
 )
 
 app.add_middleware(
